@@ -1,0 +1,179 @@
+!to "t2048", cbm
+*=$c000
+
+!zone main
+GETIN   = $FFE4
+CHAROUT = $FFD2
+; A7-AB are used by the cassete routines => not needed
+PLAYFIELD_PTR = $A7
+
+!macro use .addr {
+    lda #<.addr
+    sta PLAYFIELD_PTR
+    lda #>.addr
+    sta PLAYFIELD_PTR+1
+}
+
+!macro println .func {
+    lda #13                
+    jsr .func           ; print CR
+    lda #10
+    jsr .func           ; print LF
+}
+
+.main
+    jsr clearPlayingField
+    jsr waitForKey
+    
+    +use PLAYINGFIELD
+    jsr renderPlayingField
+    +println CHAROUT
+
+    jsr savePlayingField
+
+    jsr testPlayingFieldChanged
+    clc
+    adc #$30
+    jsr CHAROUT
+
+    ldx #2
+    lda #1
+    jsr calcPlayFieldOffset
+    lda HEX_CHARS, Y
+    jsr CHAROUT
+    +println CHAROUT
+
+    rts
+
+HEX_CHARS
+!tx "0123456789ABCDEF"
+
+; --------------------------------------------------
+; Wait for a key and return ASCII Code of key in Accumulator
+; 
+; INPUT:  None
+; OUTPUT: ASCII code of read character in accumulator
+; --------------------------------------------------
+waitForKey
+    jsr GETIN         ; get key from keyboard
+    cmp #0            ; if 0, no key pressed
+    beq waitForKey    ; loop if no key pressed
+
+    rts               ; ASCII Code of pressed key is now in accumulator
+
+
+PLAYINGFIELD
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+OLDPLAYINGFIELD
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+; --------------------------------------------------
+; Draws playing field 
+; 
+; INPUT:  Address of playing field in $A7/$A8
+; OUTPUT: None
+; --------------------------------------------------
+renderPlayingField 
+    ldx #0                ; column counter             
+    ldy #0                ; byte counter
+.charLoop    
+    clc                   
+    lda (PLAYFIELD_PTR), y
+    adc #65
+    jsr CHAROUT           ; print char
+    inx 
+    cpx #04
+    bne .nextChar         ; start a new column?
+    ldx #0                ; yes
+    +println CHAROUT
+.nextChar                 ; print next character
+    iny                   ; increment byte counter
+    cpy #16
+    bne .charLoop
+
+    rts               
+
+
+; --------------------------------------------------
+; savePlayingField copies the PLAYINGFIELD to OLDPLAYINGFIELD.
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+savePlayingField 
+    ldy #0                ; byte counter
+.charLoop2    
+    lda PLAYINGFIELD,Y    ; copy one byte
+    sta OLDPLAYINGFIELD,y
+    iny                   ; increment byte counter
+    cpy #16               ; end pos reached?
+    bne .charLoop2        ; no, copy nect byte
+
+    rts               
+
+
+; --------------------------------------------------
+; testPlayingFieldChanged compares PLAYINGFIELD to OLDPLAYINGFIELD.
+; 
+; INPUT:  None
+; OUTPUT: 0 in accu if no change was detected. 1 otherwise
+; --------------------------------------------------
+testPlayingFieldChanged 
+    ldy #0                ; byte counter
+.charLoop3    
+    lda PLAYINGFIELD,Y
+    cmp OLDPLAYINGFIELD,y ; compare old with current
+    bne .changeDetected   ; current pos differs => return
+    iny                   ; increment byte counter
+    cpy #16               ; end pos reached?
+    bne .charLoop3        ; no, test next pos
+    lda #0                ; playing fields does not differ
+    rts
+.changeDetected           ; playing fields differ
+    lda #1
+    rts               
+
+
+;--------------------------------------------------
+; clearPlayingField sets all values in the playing field to 0.
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+clearPlayingField 
+    ldy #0                ; byte counter
+    lda #0
+.charLoop4    
+    sta PLAYINGFIELD,y    ; store 0 in playing field
+    iny                   ; increment byte counter
+    cpy #16
+    bne .charLoop4
+
+    rts
+
+
+;--------------------------------------------------
+; calcPlayFieldOffset calculates the offset of the position x,y 
+; 
+; INPUT:  x-pos (0-3) in register X, y-pos (0-3) in accu
+;         X and A are not changed by this call
+; OUTPUT: offset in register Y
+; --------------------------------------------------
+calcPlayFieldOffset
+    pha            ; save accu
+    asl            ; * 2
+    asl            ; * 2
+    stx SCRATCH    ; x-pos in temp memory
+    clc
+    adc SCRATCH    ; add x-pos to row base address
+    tay            ; move result to y
+    pla            ; restore accu
+     
+    rts
+SCRATCH !byte $00
+BUFFER !byte $00, $00, $00, $00
