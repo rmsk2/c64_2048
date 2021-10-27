@@ -183,19 +183,20 @@ BUFFERTEMP !byte $00, $00, $00, $00
 LASTELEMENT !byte $00
 TEMPLEN !byte $00
 ;--------------------------------------------------
-; compressBuffer compresses a row or a column that is stored in BUFFER.
-; It implements a left shift of a row. All other shifts of rows and columns
-; can be mapped to this.
+; shiftRowLeft implements a left shift of a row. All other shifts of rows and 
+; columns can be mapped to this.
 ; 
 ; INPUT:  None
 ; OUTPUT: None
 ; --------------------------------------------------
-compressBuffer
-    lda #0             ; Clear temp buffer
+shiftRowLeft
+    ; Clear temp buffer
+    lda #0             
     sta BUFFERTEMP
     sta BUFFERTEMP+1
     sta BUFFERTEMP+2
     sta BUFFERTEMP+3    
+    ; remove all zero elements and write result to BUFFERTEMP
     ldy #0             ; read index
     ldx #0             ; write index
 .loop4                 
@@ -208,11 +209,31 @@ compressBuffer
     iny                ; increment read offset
     cpy #4             ; end reached?
     bne .loop4         ; no?
-    cpx #0             ; no byte was written. all elements are zero
-    beq .done 
-    stx TEMPLEN
+    cpx #0             
+    beq .done          ; no byte was written. all elements are zero
     
+    ; perform merging of equal elements
+    stx TEMPLEN        
 
+    ; Clear result buffer
+    lda #0             
+    sta BUFFERIN
+    sta BUFFERIN+1
+    sta BUFFERIN+2
+    sta BUFFERIN+3    
+    ; remove all zero elements from BUFFERTEMP and write result to BUFFERIN
+    ldy #0             ; read index
+    ldx #0             ; write index
+.loop5                 
+    lda BUFFERTEMP, Y  ; load input data
+    cmp #0             ; Is it zero?
+    beq .next2         ; yes, do write nothing
+    sta BUFFERIN, X    ; write nonzero value in temp buffer
+    inx                ; increment write offset
+.next2
+    iny                ; increment read offset
+    cpy #4             ; end reached?
+    bne .loop5         ; no?
 
 .done
     rts
