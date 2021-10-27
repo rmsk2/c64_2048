@@ -176,4 +176,43 @@ calcPlayFieldOffset
      
     rts
 SCRATCH !byte $00
-BUFFER !byte $00, $00, $00, $00
+
+
+BUFFERIN  !byte $00, $00, $00, $00
+BUFFERTEMP !byte $00, $00, $00, $00
+LASTELEMENT !byte $00
+TEMPLEN !byte $00
+;--------------------------------------------------
+; compressBuffer compresses a row or a column that is stored in BUFFER.
+; It implements a left shift of a row. All other shifts of rows and columns
+; can be mapped to this.
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+compressBuffer
+    lda #0             ; Clear temp buffer
+    sta BUFFERTEMP
+    sta BUFFERTEMP+1
+    sta BUFFERTEMP+2
+    sta BUFFERTEMP+3    
+    ldy #0             ; read index
+    ldx #0             ; write index
+.loop4                 
+    lda BUFFERIN, Y    ; load input data
+    cmp #0             ; Is it zero?
+    beq .next          ; yes, do write nothing
+    sta BUFFERTEMP, X  ; write nonzero value in temp buffer
+    inx                ; increment write offset
+.next
+    iny                ; increment read offset
+    cpy #4             ; end reached?
+    bne .loop4         ; no?
+    cpx #0             ; no byte was written. all elements are zero
+    beq .done 
+    stx TEMPLEN
+    
+
+
+.done
+    rts
