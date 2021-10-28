@@ -99,6 +99,18 @@ renderPlayingField
     rts               
 
 
+!macro copyField .source, .target {
+    ldy #0                ; byte counter
+.charLoop2    
+    lda .source,Y         ; copy one byte
+    sta .target,y
+    iny                   ; increment byte counter
+    cpy #16               ; end pos reached?
+    bne .charLoop2        ; no, copy nect byte
+    rts               
+}
+
+
 ; --------------------------------------------------
 ; savePlayingField copies the PLAYINGFIELD to OLDPLAYINGFIELD.
 ; 
@@ -106,15 +118,17 @@ renderPlayingField
 ; OUTPUT: None
 ; --------------------------------------------------
 savePlayingField 
-    ldy #0                ; byte counter
-.charLoop2    
-    lda PLAYINGFIELD,Y    ; copy one byte
-    sta OLDPLAYINGFIELD,y
-    iny                   ; increment byte counter
-    cpy #16               ; end pos reached?
-    bne .charLoop2        ; no, copy nect byte
+    +copyField PLAYINGFIELD, OLDPLAYINGFIELD           
 
-    rts               
+
+; --------------------------------------------------
+; restorePlayingField copies the  OLDPLAYINGFIELD to PLAYINGFIELD.
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+restorePlayingField 
+    +copyField OLDPLAYINGFIELD, PLAYINGFIELD           
 
 
 ; --------------------------------------------------
