@@ -178,62 +178,79 @@ calcPlayFieldOffset
 SCRATCH !byte $00
 
 
-BUFFERIN  !byte $00, $00, $00, $00
+BUFFERIN   !byte $00, $00, $00, $00
 BUFFERTEMP !byte $00, $00, $00, $00
-LASTELEMENT !byte $00
 TEMPLEN !byte $00
-;--------------------------------------------------
-; shiftRowLeft implements a left shift of a row. All other shifts of rows and 
-; columns can be mapped to this.
-; 
-; INPUT:  None
-; OUTPUT: None
-; --------------------------------------------------
-shiftRowLeft
-    ; Clear temp buffer
+
+!macro compressBuffer .source, .target {
+    ; Clear target buffer
+    ; This macro copies all nonzero bytes from .soure to .target 
+    ; at the end x contains the number of bytes copied
     lda #0             
-    sta BUFFERTEMP
-    sta BUFFERTEMP+1
-    sta BUFFERTEMP+2
-    sta BUFFERTEMP+3    
-    ; remove all zero elements and write result to BUFFERTEMP
+    sta .target
+    sta .target+1
+    sta .target+2
+    sta .target+3    
+    ; remove all zero elements and write result to target
     ldy #0             ; read index
     ldx #0             ; write index
 .loop4                 
-    lda BUFFERIN, Y    ; load input data
+    lda .source, Y     ; load input data
     cmp #0             ; Is it zero?
-    beq .next          ; yes, do write nothing
-    sta BUFFERTEMP, X  ; write nonzero value in temp buffer
+    beq .next          ; yes, write nothing
+    sta .target, X     ; write nonzero value in target buffer
     inx                ; increment write offset
 .next
     iny                ; increment read offset
     cpy #4             ; end reached?
     bne .loop4         ; no?
-    cpx #0             
-    beq .done          ; no byte was written. all elements are zero
-    
+}
+
+;--------------------------------------------------
+; shiftRowLeft implements a left shift of a row. All other shifts of rows and 
+; columns can be mapped to this. Input and output in BUFFERIN 
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+shiftRowLeft
+    +compressBuffer BUFFERIN, BUFFERTEMP 
+
+    ; X holds number of bytes copied
+    cpx #0
+    beq .done            ; no bytes were transferred => Input data was all zero. Nothing else to do
+    cpx #1               
+    beq .doCopy          ; Only one byte was copied, no merging necessary, only copy data back to BUFFERIN
+
+    ; Here BUFFERTEMP contains at least two nonzero elements
     ; perform merging of equal elements
-    stx TEMPLEN        
+    ; we have a sliding window of length two, that is moved over the conpressed buffer from left to right
+    dex                  
+    stx TEMPLEN          ; now x contains the last nonzero position in BUFFERTEMP
+    ldx #0               ; Begin of sliding window at pos 0
+    ldy #1               ; End of sliding window at pos 1
+.mergeLoop
+    lda BUFFERTEMP, X    ; load frist and second element of window
+    cmp BUFFERTEMP, Y
+    bne .skip            ; Elements not equal. Move window one position
+    lda #0               ; Elements in window are equal, merge them
+    sta BUFFERTEMP, y    ; clear second element of window
+    inc BUFFERTEMP, X    ; increment first window element
+    inx                  ; move window two elements
+    inx
+    iny
+    iny
+    cpx TEMPLEN
+    bcc .mergeLoop       ; start of window < last pos with nonzero element
+    bcs .doCopy          ; start of window >= last pos with zero element
+.skip
+    inx
+    iny
+    cpx TEMPLEN         ; has window reached last position?
+    bne .mergeLoop      ; no, process next element
+    ; x is at last nonzero position, therefore there is no more element to merge with
 
-    ; Clear result buffer
-    lda #0             
-    sta BUFFERIN
-    sta BUFFERIN+1
-    sta BUFFERIN+2
-    sta BUFFERIN+3    
-    ; remove all zero elements from BUFFERTEMP and write result to BUFFERIN
-    ldy #0             ; read index
-    ldx #0             ; write index
-.loop5                 
-    lda BUFFERTEMP, Y  ; load input data
-    cmp #0             ; Is it zero?
-    beq .next2         ; yes, do write nothing
-    sta BUFFERIN, X    ; write nonzero value in temp buffer
-    inx                ; increment write offset
-.next2
-    iny                ; increment read offset
-    cpy #4             ; end reached?
-    bne .loop5         ; no?
-
+.doCopy
+    +compressBuffer BUFFERTEMP, BUFFERIN
 .done
     rts
