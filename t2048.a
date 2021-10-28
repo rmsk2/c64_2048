@@ -23,7 +23,6 @@ PLAYFIELD_PTR = $A7
 
 .main
     jsr clearPlayingField
-    jsr waitForKey
     
     +use PLAYINGFIELD
     jsr renderPlayingField
@@ -267,4 +266,30 @@ shiftRowLeft
 .doCopy
     +compressBuffer BUFFERTEMP, BUFFERIN
 .done
+    rts
+
+
+!macro reverse .buffer {
+    lda .buffer
+    ldy .buffer+3
+    sta .buffer+3
+    sty .buffer
+    lda .buffer+1
+    ldy .buffer+2
+    sta .buffer+2
+    sty .buffer+1    
+}
+
+;--------------------------------------------------
+; shiftRowRight implements a right shift of a row.
+; Input and output in BUFFERIN 
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+shiftRowRight
+    +reverse BUFFERIN
+    jsr shiftRowLeft
+    +reverse BUFFERIN
+
     rts
