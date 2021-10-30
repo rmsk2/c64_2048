@@ -77,6 +77,8 @@ OLDPLAYINGFIELD
 ; INPUT:  Address of playing field in $A7/$A8
 ; OUTPUT: None
 ; --------------------------------------------------
+renderMainField
+    +use PLAYINGFIELD
 renderPlayingField 
     ldx #0                ; column counter             
     ldy #0                ; byte counter
@@ -219,6 +221,7 @@ TEMPLEN !byte $00
     bne .loop4         ; no?
 }
 
+
 ;--------------------------------------------------
 ; shiftRowLeft implements a left shift of a row. All other shifts of rows and 
 ; columns can be mapped to this. Input and output in BUFFERIN 
@@ -280,6 +283,7 @@ shiftRowLeft
     sty .buffer+1    
 }
 
+
 ;--------------------------------------------------
 ; shiftRowRight implements a right shift of a row.
 ; Input and output in BUFFERIN 
@@ -293,3 +297,75 @@ shiftRowRight
     +reverse BUFFERIN
 
     rts
+
+ROWCOUNT !byte $00
+COLCOUNT !byte $00
+;--------------------------------------------------
+; shiftPlayingField implements shifting the playing field. If .slow is equal to ROWCOUNT then
+; the shift is horizontal. If .slow is set to COLCOUNT a vertical shift is performed. The parameter
+; shiftCall then determines whether the shift is left/right or up/down. 
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+!macro shiftPlayingField .slow, .fast, .shiftCall {
+    lda #0
+    sta .slow                    ; .slow is the slow counter
+    sta .fast                    ; .fast is the fast counter
+
+.count1CopyLoop
+    ; Copy data into BUFFERIN
+    lda ROWCOUNT
+    ldx COLCOUNT
+    jsr calcPlayFieldOffset           ; returns playing field offset in y
+    lda PLAYINGFIELD, y
+    ldx .fast
+    sta BUFFERIN, X
+    inc .fast
+    lda .fast
+    cmp #04
+    bne .count1CopyLoop
+
+    ; perform shift
+    jsr .shiftCall
+
+    ; reset fast counter
+    lda #00
+    sta .fast
+
+    ; copy data back
+.count1CopyBack
+    lda ROWCOUNT
+    ldx COLCOUNT
+    jsr calcPlayFieldOffset           ; returns playing field offset in y
+    ldx .fast
+    lda BUFFERIN, x
+    sta PLAYINGFIELD, Y
+    inc .fast
+    lda .fast
+    cmp #04
+    bne .count1CopyBack
+
+    ; reset fast counter
+    lda #00
+    sta .fast
+
+    ; increment and test slow counter
+    inc .slow
+    lda .slow
+    cmp #04
+    bne .count1CopyLoop
+    rts
+} 
+
+shiftLeft
+    +shiftPlayingField ROWCOUNT, COLCOUNT, shiftRowLeft
+
+shiftRight
+    +shiftPlayingField ROWCOUNT, COLCOUNT, shiftRowRight
+
+shiftUp
+    +shiftPlayingField COLCOUNT, ROWCOUNT, shiftRowLeft
+
+shiftDown
+    +shiftPlayingField COLCOUNT, ROWCOUNT, shiftRowRight
