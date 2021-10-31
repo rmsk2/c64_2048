@@ -101,6 +101,34 @@ OLDPLAYINGFIELD
 renderMainField
     +use PLAYINGFIELD
 renderPlayingField 
+    jsr renderPoints
+    ldx #0                ; column counter             
+    ldy #0                ; byte counter
+.charLoop    
+    clc                   
+    lda (PLAYFIELD_PTR), y
+    adc #65
+    jsr CHAROUT           ; print char
+    inx 
+    cpx #04
+    bne .nextChar         ; start a new column?
+    ldx #0                ; yes
+    +println CHAROUT
+.nextChar                 ; print next character
+    iny                   ; increment byte counter
+    cpy #16
+    bne .charLoop
+
+    rts               
+
+
+; --------------------------------------------------
+; renderPoints represents the current result points on the screen
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+renderPoints
     ldy #00
 .outLoop
     ; print current points
@@ -123,25 +151,7 @@ renderPlayingField
     bne .outLoop
 
     +println CHAROUT
-
-    ldx #0                ; column counter             
-    ldy #0                ; byte counter
-.charLoop    
-    clc                   
-    lda (PLAYFIELD_PTR), y
-    adc #65
-    jsr CHAROUT           ; print char
-    inx 
-    cpx #04
-    bne .nextChar         ; start a new column?
-    ldx #0                ; yes
-    +println CHAROUT
-.nextChar                 ; print next character
-    iny                   ; increment byte counter
-    cpy #16
-    bne .charLoop
-
-    rts               
+    rts
 
 
 !macro copyField .source, .target {
