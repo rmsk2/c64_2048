@@ -264,16 +264,16 @@ addPoints
     inx                    ; x now contains 2*accu + 1
     sed
     clc
-    ; add least significant digits
+    ; add least significant digits of point value to result counter
     lda POINTS+2
     adc POWERS,X
     sta POINTS+2
-    dex                    ; x now contains offset of most significant digits
-    ; add "medium" significant digits
+    dex                    ; x now contains offset of the most significant digits of the point value
+    ; add pint value to "medium" significant digits of result counter
     lda POINTS+1 
     adc POWERS,X
     sta POINTS+1
-    ; add carry to most significant digits
+    ; add carry to most significant digits of result counter
     lda POINTS
     adc #00
     cld 
