@@ -249,7 +249,7 @@ SCRATCH !byte $00
 ;--------------------------------------------------
 ; addPoints adds a new value to the current result  
 ; 
-; INPUT:  Value to add to current points as log_2 value 1-11
+; INPUT:  Value to add to current points as log_2 value 1-11 in accu
 ; OUTPUT: None
 ; --------------------------------------------------
 addPoints
