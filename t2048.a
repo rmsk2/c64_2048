@@ -23,6 +23,11 @@ PLAYFIELD_PTR = $A7
 
 .main
     jsr clearPlayingField
+    ; clear result counter
+    lda #00
+    sta POINTS
+    sta POINTS+1
+    sta POINTS+2
     
     +use PLAYINGFIELD
     jsr renderPlayingField
@@ -46,6 +51,20 @@ PLAYFIELD_PTR = $A7
 
 HEX_CHARS
 !tx "0123456789ABCDEF"
+DEC_CHARS
+!tx "0123456789"
+POWERS 
+!byte $00, $02
+!byte $00, $04
+!byte $00, $08
+!byte $00, $16
+!byte $00, $32
+!byte $00, $64
+!byte $01, $28
+!byte $02, $56
+!byte $05, $12
+!byte $10, $24
+!byte $20, $48
 
 ; --------------------------------------------------
 ; Wait for a key and return ASCII Code of key in Accumulator
@@ -61,6 +80,8 @@ waitForKey
     rts               ; ASCII Code of pressed key is now in accumulator
 
 
+POINTS 
+!byte $00, $00, $00
 PLAYINGFIELD
 !byte $00, $00, $00, $00
 !byte $00, $00, $00, $00
@@ -80,6 +101,29 @@ OLDPLAYINGFIELD
 renderMainField
     +use PLAYINGFIELD
 renderPlayingField 
+    ldy #00
+.outLoop
+    ; print current points
+    lda POINTS, y
+    and #$F0                ; mask out most significant digit
+    lsr                     ; shift right 4 times
+    lsr
+    lsr
+    lsr 
+    tax
+    lda DEC_CHARS, X       ; use result to determine decimal digit
+    jsr CHAROUT
+    lda POINTS, y
+    and #$0F               ; mask out least significant digit
+    tax
+    lda DEC_CHARS, X
+    jsr CHAROUT
+    iny 
+    cpy #03                ; all digits printed?
+    bne .outLoop
+
+    +println CHAROUT
+
     ldx #0                ; column counter             
     ldy #0                ; byte counter
 .charLoop    
@@ -192,6 +236,39 @@ calcPlayFieldOffset
     rts
 SCRATCH !byte $00
 
+;--------------------------------------------------
+; addPoints adds a new value to the current result  
+; 
+; INPUT:  Value to add to current points as log_2 value 1-11
+; OUTPUT: None
+; --------------------------------------------------
+addPoints
+    ; transform 1-11 to 0-10
+    ; in essence decrement contents of accumulator
+    tay
+    dey
+    tya     
+    ; calc offset of 2**(contents of accu)            
+    asl                    ; *2
+    tax 
+    inx                    ; x now contains 2*accu + 1
+    sed
+    clc
+    ; add least significant digits
+    lda POINTS+2
+    adc POWERS,X
+    sta POINTS+2
+    dex                    ; x now contains offset of most significant digits
+    ; add "medium" significant digits
+    lda POINTS+1 
+    adc POWERS,X
+    sta POINTS+1
+    ; add carry to most significant digits
+    lda POINTS
+    adc #00
+    cld 
+    rts
+
 
 BUFFERIN   !byte $00, $00, $00, $00
 BUFFERTEMP !byte $00, $00, $00, $00
@@ -252,6 +329,23 @@ shiftRowLeft
     lda #0               ; Elements in window are equal, merge them
     sta BUFFERTEMP, y    ; clear second element of window
     inc BUFFERTEMP, X    ; increment first window element
+
+    ; save registers
+    txa
+    pha
+    tya
+    pha
+
+    ; add points
+    lda BUFFERTEMP, X
+    jsr addPoints
+
+    ; restore registers
+    pla
+    tay
+    pla
+    tax
+
     inx                  ; move window two elements
     inx
     iny
