@@ -473,3 +473,83 @@ shiftUp
 
 shiftDown
     +shiftPlayingField COLCOUNT, ROWCOUNT, shiftRowRight
+
+
+LFSR_STATE
+    !byte $37, $AF, $BE
+LFSR_RESULT
+    !byte $00
+LFSR_POLY
+    !byte $9C,$CD,$AE
+LFSR_CARRY
+    !byte $00
+;--------------------------------------------------
+; clockLFSR implements a 24 bit Galois LFSR with polynomial 0x9CCDAE
+; 
+; INPUT:  None
+; OUTPUT: Each clocking results in a new bit shifted fron the left into LFSR_RESULT 
+; --------------------------------------------------
+; int shift_lfsr(uint *lfsr, uint polynomial_mask)
+; {
+;     int feedback;
+;     
+;     feedback = *lfsr & 1;
+;     *lfsr >>= 1;
+;     if (feedback == 1)
+;         *lfsr ^= polynomial_mask
+;     return *lsfr;
+; }
+clockLFSR
+    lda LFSR_STATE+2
+    and #$01
+    tax
+    ; shift result byte left and or feedback bit into it
+    lda LFSR_RESULT
+    asl                          ; shift current result left
+    cpx #01                      ; is feedback bit 1?
+    bne .store                   ; no ....
+    ora #01                      ; set least significant bit in result
+.store
+    sta LFSR_RESULT              ; store result
+
+    ; shift state right
+    lda LFSR_STATE
+    lsr 
+    sta LFSR_STATE
+    lda #0
+    bcc .next
+    lda #$80
+.next 
+    sta LFSR_CARRY
+
+    lda LFSR_STATE+1
+    lsr 
+    ora LFSR_CARRY
+    sta LFSR_STATE+1
+    lda #0
+    bcc .next2
+    lda #$80
+.next2 
+    sta LFSR_CARRY
+
+    lda LFSR_STATE+2
+    lsr 
+    ora LFSR_CARRY
+    sta LFSR_STATE+2
+
+    cpx #01
+    bne .skip2                   ; feedback bit is zero => we are done
+    ; xor polynomial to shifted state if feedback bit is one
+    lda LFSR_STATE
+    eor LFSR_POLY
+    sta LFSR_STATE
+    lda LFSR_STATE+1
+    eor LFSR_POLY+1
+    sta LFSR_STATE+1
+    lda LFSR_STATE+2
+    eor LFSR_POLY+2
+    sta LFSR_STATE+2
+.skip2
+    rts
+
+    
