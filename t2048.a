@@ -21,7 +21,7 @@ PLAYFIELD_PTR = $A7
     jsr .func           ; print LF
 }
 
-.main
+main
     jsr clearPlayingField
     ; clear result counter
     lda #00
@@ -30,24 +30,41 @@ PLAYFIELD_PTR = $A7
     sta POINTS+2
     sta LFSR_RESULT                       ; clear LFSR result
     
-    +use PLAYINGFIELD
+    jsr add2AtRandomPos
+
+    +use PLAYINGFIELD  
+.mainLoop
+    jsr add2AtRandomPos
     jsr renderPlayingField
     +println CHAROUT
 
-    jsr savePlayingField
+    jsr waitForKey
 
-    jsr testPlayingFieldChanged
-    clc
-    adc #$30
-    jsr CHAROUT
+    cmp #87                             ; W => up
+    beq .userInputUp
+    cmp #83                             ; S => down
+    beq .userInputDown
+    cmp #65                             ; A => left
+    beq .userInputLeft
+    cmp #68                             ; D => right
+    beq .userInputRight
+    cmp #75                             ; K => Kuit ;-)
+    beq .mainDone
+    bne .mainLoop
+.userInputUp
+    jsr shiftUp
+    jmp .mainLoop
+.userInputDown
+    jsr shiftDown
+    jmp .mainLoop
+.userInputLeft
+    jsr shiftLeft
+    jmp .mainLoop
+.userInputRight
+    jsr shiftRight
+    jmp .mainLoop
 
-    ldx #2
-    lda #1
-    jsr calcPlayFieldOffset
-    lda HEX_CHARS, Y
-    jsr CHAROUT
-    +println CHAROUT
-
+.mainDone
     rts
 
 HEX_CHARS
