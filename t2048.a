@@ -3,26 +3,11 @@
 
 !zone main
 GETIN   = $FFE4
-CHAROUT = $FFD2
-; A7-AB are used by the cassete routines => not needed
-PLAYFIELD_PTR = $A7
-
-!macro use .addr {
-    lda #<.addr
-    sta PLAYFIELD_PTR
-    lda #>.addr
-    sta PLAYFIELD_PTR+1
-}
-
-!macro println .func {
-    lda #13                
-    jsr .func           ; print CR
-    lda #10
-    jsr .func           ; print LF
-}
 
 main
+    jsr initDrawing
     jsr clearPlayingField
+    
     ; clear result counter
     lda #00
     sta POINTS
@@ -30,13 +15,19 @@ main
     sta POINTS+2
     sta LFSR_RESULT                       ; clear LFSR result
     
+    ; Add current uptime to LFSR_STATE
+    lda $A0
+    eor LFSR_STATE + 1
+    sta LFSR_STATE + 1
+    lda $A1
+    eor LFSR_STATE + 2
+    sta LFSR_STATE + 2
+
     jsr add2AtRandomPos
 
-    +use PLAYINGFIELD  
 .mainLoop
     jsr add2AtRandomPos
     jsr renderPlayingField
-    +println CHAROUT
 
     jsr waitForKey
 
@@ -67,10 +58,7 @@ main
 .mainDone
     rts
 
-HEX_CHARS
-!tx "0123456789ABCDEF"
-DEC_CHARS
-!tx "0123456789"
+
 POWERS 
 !byte $00, $02
 !byte $00, $04
@@ -110,66 +98,6 @@ OLDPLAYINGFIELD
 !byte $00, $00, $00, $00
 !byte $00, $00, $00, $00
 !byte $00, $00, $00, $00
-; --------------------------------------------------
-; Draws playing field 
-; 
-; INPUT:  Address of playing field in $A7/$A8
-; OUTPUT: None
-; --------------------------------------------------
-renderMainField
-    +use PLAYINGFIELD
-renderPlayingField 
-    jsr renderPoints
-    ldx #0                ; column counter             
-    ldy #0                ; byte counter
-.charLoop    
-    clc                   
-    lda (PLAYFIELD_PTR), y
-    adc #65
-    jsr CHAROUT           ; print char
-    inx 
-    cpx #04
-    bne .nextChar         ; start a new column?
-    ldx #0                ; yes
-    +println CHAROUT
-.nextChar                 ; print next character
-    iny                   ; increment byte counter
-    cpy #16
-    bne .charLoop
-
-    rts               
-
-
-; --------------------------------------------------
-; renderPoints represents the current result points on the screen
-; 
-; INPUT:  None
-; OUTPUT: None
-; --------------------------------------------------
-renderPoints
-    ldy #00
-.outLoop
-    ; print current points
-    lda POINTS, y
-    and #$F0                ; mask out most significant digit
-    lsr                     ; shift right 4 times
-    lsr
-    lsr
-    lsr 
-    tax
-    lda DEC_CHARS, X       ; use result to determine decimal digit
-    jsr CHAROUT
-    lda POINTS, y
-    and #$0F               ; mask out least significant digit
-    tax
-    lda DEC_CHARS, X
-    jsr CHAROUT
-    iny 
-    cpy #03                ; all digits printed?
-    bne .outLoop
-
-    +println CHAROUT
-    rts
 
 
 !macro copyField .source, .target {
@@ -255,14 +183,14 @@ calcPlayFieldOffset
     pha            ; save accu
     asl            ; * 2
     asl            ; * 2
-    stx SCRATCH    ; x-pos in temp memory
+    stx .SCRATCH    ; x-pos in temp memory
     clc
-    adc SCRATCH    ; add x-pos to row base address
+    adc .SCRATCH    ; add x-pos to row base address
     tay            ; move result to y
     pla            ; restore accu
      
     rts
-SCRATCH !byte $00
+.SCRATCH !byte $00
 
 ;--------------------------------------------------
 ; addPoints adds a new value to the current result  
@@ -611,3 +539,4 @@ add2AtRandomPos
     lda #00                                ; all OK => return 0
     rts
 
+!source "t2048draw.a"

@@ -1,0 +1,165 @@
+!zone draw
+
+.SCREEN_RAM = $0400
+.COLOR_RAM =  $D800
+.CHAROUT = $FFD2
+
+; A7-AB are used by the cassete routines => not needed
+.PLAYFIELD_PTR = $A7;$A8
+.DISPLAY_RAM = $A9;$AA
+.DRAW_PTR = $9E;$9F
+
+
+!macro load .addr, .ptr {
+    lda #<.addr
+    sta .ptr
+    lda #>.addr
+    sta .ptr+1
+}
+
+!macro println .func {
+    lda #13                
+    jsr .func           ; print CR
+    lda #10
+    jsr .func           ; print LF
+}
+
+; --------------------------------------------------
+; initDrawing initializes the drawing routines
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+initDrawing
+    +load PLAYINGFIELD, .PLAYFIELD_PTR
+    rts
+
+
+; --------------------------------------------------
+; Draws playing field 
+; 
+; INPUT:  Address of playing field in $A7/$A8
+; OUTPUT: None
+; --------------------------------------------------
+renderMainField
+    +load PLAYINGFIELD, .PLAYFIELD_PTR
+renderPlayingField 
+    jsr renderPoints
+    ldx #0                ; column counter             
+    ldy #0                ; byte counter
+.charLoop    
+    clc                   
+    lda (.PLAYFIELD_PTR), y
+    bne .printFilledElement
+    lda #114
+    jmp .printElement
+.printFilledElement
+    adc #65
+.printElement
+    jsr .CHAROUT           ; print char
+    inx 
+    cpx #04
+    bne .nextChar         ; start a new column?
+    ldx #0                ; yes
+    +println .CHAROUT
+.nextChar                 ; print next character
+    iny                   ; increment byte counter
+    cpy #16
+    bne .charLoop
+
+    +println .CHAROUT
+    rts               
+
+.DEC_CHARS
+!tx "0123456789"
+; --------------------------------------------------
+; renderPoints represents the current result points on the screen
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+renderPoints
+    ldy #00
+.outLoop
+    ; print current points
+    lda POINTS, y
+    and #$F0                ; mask out most significant digit
+    lsr                     ; shift right 4 times
+    lsr
+    lsr
+    lsr 
+    tax
+    lda .DEC_CHARS, X       ; use result to determine decimal digit
+    jsr .CHAROUT
+    lda POINTS, y
+    and #$0F               ; mask out least significant digit
+    tax
+    lda .DEC_CHARS, X
+    jsr .CHAROUT
+    iny 
+    cpy #03                ; all digits printed?
+    bne .outLoop
+
+    +println .CHAROUT
+    rts
+
+
+; --------------------------------------------------
+; .locate sets $A9/$AA to the correct address in an area of 40x25 characters. It can be used
+; to point to screen or color ram
+; 
+; INPUT:  x position in x, y address in y
+; OUTPUT: sets $A9/$AA
+; --------------------------------------------------
+.CURRENT_COLOR
+!byte $00
+
+; --------------------------------------------------
+; double16Bit multiplies the 16 bit value stored at .memAddr by 2
+; --------------------------------------------------
+; this is currently probably wrong!
+!macro double16Bit .val, .memAddr {
+    asl .memAddr+1
+    asl .memAddr                     ; sets carry bit
+    lda #$00                         ; does not change carry bit 
+    bcc .noCarry
+    lda #$01
+.noCarry
+    ora .memAddr+1
+    sta .memAddr+1
+}
+
+; --------------------------------------------------
+; inc16Bit implements a 16 bit increment of the 16 bit value stored at memAddr 
+; --------------------------------------------------
+!macro inc16Bit .memAddr {
+    clc
+    inc .memAddr
+    bcc .noCarryInc
+    inc .memAddr+1
+.noCarryInc
+}
+
+; --------------------------------------------------
+; add16Bit implements a 16 bit add of the values stored at memAddr1 and memAddr2 
+; The result is stored in .memAddr2
+; --------------------------------------------------
+!macro add16Bit .memAddr1, .memAddr2 {
+    clc
+    lda .memAddr1
+    adc .memAddr2
+    sta .memAddr2
+    lda .memAddr1+1
+    adc .memAddr2+1
+    sta .memAddr2+1
+}
+
+.LOCATE_TEMP
+!byte $00
+.LOCATE_ADDRESS
+!byte $00, $00
+!macro locate .baseAddress {
+    +use .baseAddress, .DISPLAY_RAM
+
+}
+
