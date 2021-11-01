@@ -28,6 +28,7 @@ PLAYFIELD_PTR = $A7
     sta POINTS
     sta POINTS+1
     sta POINTS+2
+    sta LFSR_RESULT                       ; clear LFSR result
     
     +use PLAYINGFIELD
     jsr renderPlayingField
@@ -552,4 +553,44 @@ clockLFSR
 .skip2
     rts
 
-    
+
+;--------------------------------------------------
+; add2AtRandomPos adds a "2" to the playing field at a random location
+; 
+; INPUT:  None
+; OUTPUT: accumulator contains a zero, if the "2" was placed successfully. Otherwise a 1
+;         is written to the accu. This means all elements of the playing field are already
+;         used. 
+; --------------------------------------------------
+add2AtRandomPos
+    ; clear result
+    lda #0
+    sta LFSR_RESULT
+    ; get 4 pseudorandom bits
+    jsr clockLFSR
+    jsr clockLFSR
+    jsr clockLFSR
+    jsr clockLFSR
+
+    ldy #00                                ; counts the number of attempts
+    ldx LFSR_RESULT                        ; position to look at
+.tryNextPosition
+    lda PLAYINGFIELD, X                    ; zero flag is set when loaded value is zero
+    beq .foundFreeElement                  ; a zero was loaded, i.e. field is empty  => write "2" 
+    inx
+    ; increment search pos by one mod 16
+    txa
+    and #$0F
+    tax
+    ; increment number of attempts
+    iny
+    cpy #16
+    bne .tryNextPosition
+    lda #01                                ; no free position was found => return 1
+    rts
+.foundFreeElement
+    lda #01
+    sta PLAYINGFIELD, X                    ; write a "2" at position X
+    lda #00                                ; all OK => return 0
+    rts
+
