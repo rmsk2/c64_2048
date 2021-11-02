@@ -1,8 +1,10 @@
 !to "t2048", cbm
 *=$c000
 
+!source "arith16.a"
 !zone main
 GETIN   = $FFE4
+CHAROUT = $FFD2
 
 main
     jsr initDrawing
@@ -502,6 +504,9 @@ clockLFSR
 ;--------------------------------------------------
 ; add2AtRandomPos adds a "2" to the playing field at a random location
 ; 
+; THIS ROUTINE HAS TO BE IMPROVED. SEARCHING FOR THE NEXT FREE POSITION CREATES
+; PERCEPTIBLE PATTERNS.
+;
 ; INPUT:  None
 ; OUTPUT: accumulator contains a zero, if the "2" was placed successfully. Otherwise a 1
 ;         is written to the accu. This means all elements of the playing field are already
@@ -540,3 +545,8 @@ add2AtRandomPos
     rts
 
 !source "t2048draw.a"
+
+;TEST=0
+!ifdef TEST {
+!source "tests.a"    
+}

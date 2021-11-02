@@ -1,0 +1,82 @@
+; --------------------------------------------------
+; load16BitImmediate loads the 16 bit value given in .val into the memory location given
+; by .addr 
+; --------------------------------------------------
+!macro load16BitImmediate .val, .addr {
+    lda #<.val
+    sta .addr
+    lda #>.val
+    sta .addr+1
+}
+
+
+; --------------------------------------------------
+; move16Bit copies the 16 bit value stored at .memAddr1 to .memAddr2
+; --------------------------------------------------
+!macro move16Bit .memAddr1, .memAddr2 {
+    ; copy lo byte
+    lda .memAddr1
+    sta .memAddr2
+    ; copy hi byte
+    lda .memAddr1+1
+    sta .memAddr2+1
+}
+
+
+; --------------------------------------------------
+; double16Bit multiplies the 16 bit value stored at .memAddr by 2
+; --------------------------------------------------
+!macro double16Bit .memAddr {
+    asl .memAddr+1
+    asl .memAddr                     
+    bcc .noCarry                     ; no carry set => we are already done
+    ; carry set => set least significant bit in hi byte. No add or inc is required as bit 0 
+    ; of .memAddr+1 has to be zero due to previous left shift
+    lda #$01
+    ora .memAddr+1                   
+    sta .memAddr+1
+.noCarry    
+}
+
+
+; --------------------------------------------------
+; inc16Bit implements a 16 bit increment of the 16 bit value stored at .memAddr 
+; --------------------------------------------------
+!macro inc16Bit .memAddr {
+    clc
+    lda #1
+    adc .memAddr
+    sta .memAddr
+    bcc .noCarryInc
+    inc .memAddr+1
+.noCarryInc
+}
+
+; --------------------------------------------------
+; cmp16Bit compares the 16 bit values stored at memAddr1 and memAddr2 
+; Z  flag is set in case these values are equal
+; --------------------------------------------------
+!macro cmp16Bit .memAddr1, .memAddr2 {
+    lda .memAddr1
+    cmp .memAddr2
+    bne .unequal
+    lda .memAddr1+1
+    cmp .memAddr2+1
+.unequal
+}
+
+; --------------------------------------------------
+; add16Bit implements a 16 bit add of the values stored at memAddr1 and memAddr2 
+; The result is stored in .memAddr2
+; --------------------------------------------------
+!macro add16Bit .memAddr1, .memAddr2 {
+    clc
+    ; add lo bytes
+    lda .memAddr1
+    adc .memAddr2
+    sta .memAddr2
+    ; add hi bytes
+    lda .memAddr1+1
+    adc .memAddr2+1
+    sta .memAddr2+1
+}

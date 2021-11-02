@@ -1,0 +1,25 @@
+!zone tests
+
+.VAL1 !byte $00, $00
+.VAL2 !byte $00, $00
+.VAL3 !byte $00, $00
+.VAL4 !byte $00, $00
+test16BitArithmetic
+    +load16BitImmediate $12F0, .VAL1
+    +load16BitImmediate $0080, .VAL2
+    +move16Bit .VAL2, .VAL4
+    +load16BitImmediate $1370, .VAL3
+    +add16Bit .VAL2, .VAL1
+    +cmp16Bit .VAL1, .VAL3
+    beq .cmpOK
+    lda #$41
+    jsr CHAROUT
+.cmpOK
+    +load16BitImmediate $0100, .VAL3
+    +double16Bit .VAL4
+    +cmp16Bit .VAL4, .VAL3
+    beq .cmpOK2
+    lda #$42
+    jsr CHAROUT
+.cmpOK2
+    rts
