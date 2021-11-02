@@ -23,3 +23,8 @@ test16BitArithmetic
     jsr CHAROUT
 .cmpOK2
     rts
+
+testScrOut
+    jsr initDrawing
+    jsr renderPoints
+    rts

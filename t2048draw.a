@@ -1,13 +1,16 @@
 !zone draw
 
-.SCREEN_RAM = $0400
-.COLOR_RAM =  $D800
+.SCREEN_RAM_BASE = $0400
+.COLOR_RAM_BASE =  $D800
+COLOR_BLACK = 0
 
 ; A7-AB are used by the cassete routines => not needed
 .PLAYFIELD_PTR = $A7;$A8
-.DISPLAY_RAM = $A9;$AA
-.DRAW_PTR = $9E;$9F
+.SCREEN_RAM = $A9;$AA
+.COLOR_RAM = $9E;$9F
 
+.CURRENT_COLOR
+!byte $00
 
 !macro println .func {
     lda #13                
@@ -24,6 +27,7 @@
 ; --------------------------------------------------
 initDrawing
     +load16BitImmediate PLAYINGFIELD, .PLAYFIELD_PTR
+    jsr clearScreen
     rts
 
 
@@ -62,8 +66,10 @@ renderPlayingField
     +println CHAROUT
     rts               
 
+!ct scr
 .DEC_CHARS
 !tx "0123456789"
+!ct pet
 ; --------------------------------------------------
 ; renderPoints represents the current result points on the screen
 ; 
@@ -71,6 +77,15 @@ renderPlayingField
 ; OUTPUT: None
 ; --------------------------------------------------
 renderPoints
+    ; set output color: 
+    lda #COLOR_BLACK
+    sta .CURRENT_COLOR
+
+    ; set output position 
+    ldy #30
+    ldx #4
+    jsr locateCursor
+    
     ldy #00
 .outLoop
     ; print current points
@@ -82,36 +97,115 @@ renderPoints
     lsr 
     tax
     lda .DEC_CHARS, X       ; use result to determine decimal digit
-    jsr CHAROUT
+    jsr printChar
     lda POINTS, y
-    and #$0F               ; mask out least significant digit
+    and #$0F                ; mask out least significant digit
     tax
     lda .DEC_CHARS, X
-    jsr CHAROUT
+    jsr printChar
     iny 
     cpy #03                ; all digits printed?
     bne .outLoop
 
-    +println CHAROUT
     rts
 
 
-; --------------------------------------------------
-; .locate sets $A9/$AA to the correct address in an area of 40x25 characters. It can be used
-; to point to screen or color ram
-; 
-; INPUT:  x position in x, y address in y
-; OUTPUT: sets $A9/$AA
-; --------------------------------------------------
-.CURRENT_COLOR
-!byte $00
 
-
-.LOCATE_TEMP
-!byte $00
-.LOCATE_ADDRESS
+.OFFSET_ADR
 !byte $00, $00
-!macro locate .baseAddress {
-    +load16BitImmediate .baseAddress, .DISPLAY_RAM
+.OFFSET_TMP
+!byte $00, $00
+; --------------------------------------------------
+; .locateCursor sets .DISPLAY_RAM and .COLOR_RAM to the correct address in an area of 40x25 characters.
+; 
+; INPUT:  x position (0..39) in **y**, y position (0..24) in **x**
+; OUTPUT: sets .DISPLAY_RAM and .COLOR_RAM
+; --------------------------------------------------
+locateCursor
+    lda #0
+    ; put line number in .OFFSET_ADR
+    sta .OFFSET_ADR+1
+    stx .OFFSET_ADR
+    ; copy line number to .OFFSET_TMP
+    +move16Bit .OFFSET_ADR, .OFFSET_TMP
+    ; multiply line number by 32 
+    +double16Bit .OFFSET_ADR
+    +double16Bit .OFFSET_ADR
+    +double16Bit .OFFSET_ADR
+    +double16Bit .OFFSET_ADR
+    +double16Bit .OFFSET_ADR
+    ; multiply line number by 8
+    +double16Bit .OFFSET_TMP
+    +double16Bit .OFFSET_TMP
+    +double16Bit .OFFSET_TMP
+    ; OFFSET_ADR = line * 32 + line * 8 = line * (8 + 32) = line * 40
+    +add16Bit .OFFSET_TMP, .OFFSET_ADR
+    ; .OFFSET_TMP = x pos
+    lda #0
+    sta .OFFSET_TMP+1
+    sty .OFFSET_TMP
+    +add16Bit .OFFSET_TMP, .OFFSET_ADR
+    ; now set base address in screen and color ram
+    +load16BitImmediate .SCREEN_RAM_BASE, .SCREEN_RAM
+    +add16Bit .OFFSET_ADR, .SCREEN_RAM
+    +load16BitImmediate .COLOR_RAM_BASE, .COLOR_RAM
+    +add16Bit .OFFSET_ADR, .COLOR_RAM
     rts
-}
+
+
+; --------------------------------------------------
+; clearScreen fills all characters on screen with space.
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+clearScreen
+    ldx #0
+.nextLine
+    ldy #0
+    jsr locateCursor
+    lda #32
+.nextCell    
+    sta (.SCREEN_RAM), y
+    iny
+    cpy #40
+    bne .nextCell
+    inx 
+    cpx #25
+    bne .nextLine
+    rts
+    
+
+.PRINT_TMP !byte $00
+; --------------------------------------------------
+; printChar prints a character to the screen using .CURRENT_COLOR
+; 
+; INPUT:  Accu contains the character to print
+; OUTPUT: None
+; --------------------------------------------------
+printChar
+    sta .PRINT_TMP
+    ; save y register
+    tya
+    pha 
+
+    ; offset is always zero
+    ldy #0
+    ; set color ram
+    lda .CURRENT_COLOR
+    sta (.COLOR_RAM), y
+    ; print character
+    lda .PRINT_TMP
+    sta (.SCREEN_RAM), Y
+
+    ; restore y register
+    pla
+    tay 
+    ; increment output memory
+    +inc16Bit .COLOR_RAM
+    +inc16Bit .SCREEN_RAM
+
+    ; restore accumulator
+    lda .PRINT_TMP
+    rts
+
