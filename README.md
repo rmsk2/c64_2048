@@ -16,3 +16,5 @@ The game itself defaults to keyboard control. If you `POKE` a nonzero value to t
 | Shift playfield left | `A` | Left |
 | Shift playfield right | `D` | Right |
 | Quit game | `K` | Fire |
+
+Screenshot:![](/t2048.png?raw=true "Screenshot of game")
