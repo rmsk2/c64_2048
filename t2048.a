@@ -4,7 +4,7 @@
 !source "arith16.a"
 !zone main
 GETIN   = $FFE4
-CHAROUT = $FFD2
+JOYSTICK2 = $DC00
 
 main
     jsr initDrawing
@@ -29,9 +29,11 @@ main
 
 .mainLoop
     jsr add2AtRandomPos
+.invaidPress
     jsr renderPlayingField
 
-    jsr waitForKey
+    ;jsr waitForKey
+    jsr waitForJoystick
 
     cmp #87                             ; W => up
     beq .userInputUp
@@ -43,7 +45,7 @@ main
     beq .userInputRight
     cmp #75                             ; K => Kuit ;-)
     beq .mainDone
-    bne .mainLoop
+    bne .invaidPress
 .userInputUp
     jsr shiftUp
     jmp .mainLoop
@@ -87,6 +89,50 @@ waitForKey
     beq waitForKey    ; loop if no key pressed
 
     rts               ; ASCII Code of pressed key is now in accumulator
+
+
+; --------------------------------------------------
+; Wait for a joystick move and return ASCII Code of direction 
+; in accumulator. This is intended to be compatible with waitForKey
+; 
+; INPUT:  None
+; OUTPUT: ASCII code of read character in accumulator
+; --------------------------------------------------
+waitForJoystick
+.loopJoy
+    lda JOYSTICK2
+    cmp #$7e          ; up
+    beq .upFound
+    cmp #$7d          ; down
+    beq .downFound
+    cmp #$7b          ; left
+    beq .leftFound
+    cmp #$77          ; right   
+    beq .rightFound
+    cmp #$6f          ; fire
+    beq .quitFound
+    bne .loopJoy
+.upFound
+    lda #87
+    jmp .waitNeutral
+.downFound
+    lda #83
+    jmp .waitNeutral
+.leftFound
+    lda #65
+    jmp .waitNeutral
+.rightFound
+    lda #68
+    jmp .waitNeutral
+.quitFound
+    lda #75
+    ; wait until joystick is in neutral position again
+.waitNeutral
+    ldy JOYSTICK2
+    cpy #127
+    bne .waitNeutral
+
+    rts
 
 
 POINTS 

@@ -107,7 +107,7 @@ renderPlayingField
     ; load position data
     +load16BitImmediate .DATA_CELL_POS, .DATA_PTR
     lda .CELL_COUNT
-    asl
+    asl                    ; *2
     tay
     lda (.DATA_PTR), Y
     sta .POS_LINE
@@ -119,9 +119,9 @@ renderPlayingField
     +load16BitImmediate .DATA_CELL_VALUES, .DATA_PTR
     ldy .CELL_COUNT
     lda PLAYINGFIELD, Y
-    asl
-    asl
-    asl
+    asl                   ; *2
+    asl                   ; *2
+    asl                   ; *2
     tay
 
     ; copy text for cell
