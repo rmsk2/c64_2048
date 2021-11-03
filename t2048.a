@@ -32,9 +32,14 @@ main
 .invaidPress
     jsr renderPlayingField
 
-    ;jsr waitForKey
+    lda USE_JOYSTICK
+    bne .useJoystick 
+    jsr waitForKey
+    jmp .evalKeyPress
+.useJoystick
     jsr waitForJoystick
 
+.evalKeyPress
     cmp #87                             ; W => up
     beq .userInputUp
     cmp #83                             ; S => down
@@ -63,6 +68,9 @@ main
     jsr clearScreen
     rts
 
+
+USE_JOYSTICK
+!byte $00
 
 POWERS 
 !byte $00, $02
@@ -396,6 +404,7 @@ shiftRowRight
     +reverse BUFFERIN
 
     rts
+
 
 ROWCOUNT !byte $00
 COLCOUNT !byte $00
