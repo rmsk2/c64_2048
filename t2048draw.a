@@ -30,13 +30,6 @@ COLOR_LIGHT_GREY = 15
 .CURRENT_COLOR
 !byte $00
 
-; !macro println .func {
-;     lda #13                
-;     jsr .func           ; print CR
-;     lda #10
-;     jsr .func           ; print LF
-; }
-
 ; --------------------------------------------------
 ; initDrawing initializes the drawing routines
 ; 
@@ -49,6 +42,23 @@ initDrawing
     sta .FRAME_COLOR_ADR
     sta .BACKGROUND_COLOR_ADR
     rts
+
+
+; --------------------------------------------------
+; deInitDrawing deinitializes the drawing routines
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+deInitDrawing
+    jsr clearScreen
+    lda #COLOR_LIGHT_BLUE
+    sta .FRAME_COLOR_ADR
+    lda #COLOR_BLUE
+    sta .BACKGROUND_COLOR_ADR
+    
+    rts
+
 
 .DATA_CELL_POS
 !byte 4, 4            ; line, column cell 0

@@ -65,7 +65,7 @@ main
     jmp .mainLoop
 
 .mainDone
-    jsr clearScreen
+    jsr deInitDrawing
     rts
 
 
