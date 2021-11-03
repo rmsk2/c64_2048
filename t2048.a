@@ -58,6 +58,7 @@ main
     jmp .mainLoop
 
 .mainDone
+    jsr clearScreen
     rts
 
 

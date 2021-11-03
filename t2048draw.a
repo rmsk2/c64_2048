@@ -2,22 +2,40 @@
 
 .SCREEN_RAM_BASE = $0400
 .COLOR_RAM_BASE =  $D800
+.FRAME_COLOR_ADR = $D020
+.BACKGROUND_COLOR_ADR = $D021
+
 COLOR_BLACK = 0
+COLOR_WHITE = 1
+COLOR_RED = 2
+COLOR_CYAN = 3
+COLOR_PURPLE = 4
+COLOR_GREEN = 5
+COLOR_BLUE = 6
+COLOR_YELLOW = 7
+COLOR_ORANGE = 8
+COLOR_BROWN = 9
+COLOR_PINK = 10
+COLOR_DARK_GREY = 11
+COLOR_GREY = 12
+COLOR_LIGHT_GREEN = 13
+COLOR_LIGHT_BLUE = 14
+COLOR_LIGHT_GREY = 15
 
 ; A7-AB are used by the cassete routines => not needed
-.PLAYFIELD_PTR = $A7;$A8
+.DATA_PTR = $A7;$A8
 .SCREEN_RAM = $A9;$AA
 .COLOR_RAM = $9E;$9F
 
 .CURRENT_COLOR
 !byte $00
 
-!macro println .func {
-    lda #13                
-    jsr .func           ; print CR
-    lda #10
-    jsr .func           ; print LF
-}
+; !macro println .func {
+;     lda #13                
+;     jsr .func           ; print CR
+;     lda #10
+;     jsr .func           ; print LF
+; }
 
 ; --------------------------------------------------
 ; initDrawing initializes the drawing routines
@@ -26,44 +44,143 @@ COLOR_BLACK = 0
 ; OUTPUT: None
 ; --------------------------------------------------
 initDrawing
-    +load16BitImmediate PLAYINGFIELD, .PLAYFIELD_PTR
     jsr clearScreen
+    lda #COLOR_BLACK
+    sta .FRAME_COLOR_ADR
+    sta .BACKGROUND_COLOR_ADR
     rts
 
+.DATA_CELL_POS
+!byte 4, 4            ; line, column cell 0
+!byte 4, 11           ; line, column cell 1 
+!byte 4, 18           ; line, column cell 2
+!byte 4, 25           ; line, column cell 3
 
+!byte 8, 4            ; line, column cell 4
+!byte 8, 11           ; line, column cell 5 
+!byte 8, 18           ; line, column cell 6
+!byte 8, 25           ; line, column cell 7
+
+!byte 12, 4           ; line, column cell 8
+!byte 12, 11          ; line, column cell 9 
+!byte 12, 18          ; line, column cell 10
+!byte 12, 25          ; line, column cell 11
+
+!byte 16, 4           ; line, column cell 12
+!byte 16, 11          ; line, column cell 13 
+!byte 16, 18          ; line, column cell 14
+!byte 16, 25          ; line, column cell 15
+
+.SIX_SPACE_REVERSE
+!byte $A0, $A0, $A0, $A0, $A0, $A0
+
+.DATA_CELL_VALUES
+!byte $A0, $A0, $A0, $A0, $A0, $A0, COLOR_LIGHT_GREY, $00       ; value 0
+!byte $A0, $A0, $A0, $B2, $A0, $A0, COLOR_RED, $00         ; value 1 => 2
+!byte $A0, $A0, $A0, $B4, $A0, $A0, COLOR_CYAN, $00        ; value 2 => 4
+!byte $A0, $A0, $A0, $B8, $A0, $A0, COLOR_PURPLE, $00      ; value 3 => 8
+!byte $A0, $A0, $B1, $B6, $A0, $A0, COLOR_GREEN, $00       ; value 4 => 16
+!byte $A0, $A0, $B3, $B2, $A0, $A0, COLOR_BLUE, $00        ; value 5 => 32
+!byte $A0, $A0, $B6, $B4, $A0, $A0, COLOR_YELLOW, $00      ; value 6 => 64
+!byte $A0, $A0, $B1, $B2, $B8, $A0, COLOR_ORANGE, $00      ; value 7 => 128
+!byte $A0, $A0, $B2, $B5, $B6, $A0, COLOR_BROWN, $00       ; value 8 => 256
+!byte $A0, $A0, $B5, $B1, $B2, $A0, COLOR_PINK, $00        ; value 9 => 512
+!byte $A0, $B1, $B0, $B2, $B4, $A0, COLOR_LIGHT_BLUE, $00  ; value 10 => 1024
+!byte $A0, $B2, $B0, $B4, $B8, $A0, COLOR_LIGHT_GREEN, $00 ; value 11 => 2048
+
+.POS_LINE !byte $00
+.POS_COL  !byte $00
+.CELL_TEXT !byte $00,$00,$00,$00,$00,$00
+.CELL_COLOR !byte $00
+.CELL_COUNT !byte $00
 ; --------------------------------------------------
 ; Draws playing field 
 ; 
-; INPUT:  Address of playing field in $A7/$A8
+; INPUT:  None
 ; OUTPUT: None
 ; --------------------------------------------------
-renderMainField
-    +load16BitImmediate PLAYINGFIELD, .PLAYFIELD_PTR
 renderPlayingField 
     jsr renderPoints
-    ldx #0                ; column counter             
-    ldy #0                ; byte counter
-.charLoop    
-    clc                   
-    lda (.PLAYFIELD_PTR), y
-    bne .printFilledElement
-    lda #114
-    jmp .printElement
-.printFilledElement
-    adc #65
-.printElement
-    jsr CHAROUT           ; print char
-    inx 
-    cpx #04
-    bne .nextChar         ; start a new column?
-    ldx #0                ; yes
-    +println CHAROUT
-.nextChar                 ; print next character
-    iny                   ; increment byte counter
-    cpy #16
-    bne .charLoop
+    lda #0
+    sta .CELL_COUNT
+.nextCellRender
+    ; load position data
+    +load16BitImmediate .DATA_CELL_POS, .DATA_PTR
+    lda .CELL_COUNT
+    asl
+    tay
+    lda (.DATA_PTR), Y
+    sta .POS_LINE
+    iny
+    lda (.DATA_PTR), Y
+    sta .POS_COL
+    
+    ; load contents data
+    +load16BitImmediate .DATA_CELL_VALUES, .DATA_PTR
+    ldy .CELL_COUNT
+    lda PLAYINGFIELD, Y
+    asl
+    asl
+    asl
+    tay
 
-    +println CHAROUT
+    ; copy text for cell
+    ldx #0
+.nextValChar
+    lda (.DATA_PTR), Y
+    sta .CELL_TEXT, x    
+    iny
+    inx
+    cpx #06
+    bne .nextValChar
+
+    ; copy color for cell
+    lda (.DATA_PTR),Y
+    sta .CELL_COLOR
+
+    lda .CELL_COLOR
+    sta .CURRENT_COLOR
+
+    ; write six reverse space characters
+    ldy .POS_LINE
+    ldx .POS_COL
+    jsr locateCursor
+
+    +load16BitImmediate .SIX_SPACE_REVERSE, .DATA_PTR
+    lda #06
+    jsr printStr
+
+    ; increment line count
+    inc .POS_LINE
+
+    ; write cell text
+    ldy .POS_LINE
+    ldx .POS_COL
+    jsr locateCursor
+
+    +load16BitImmediate .CELL_TEXT, .DATA_PTR
+    lda #06
+    jsr printStr
+
+    ; increment line count
+    inc .POS_LINE
+
+    ; write six reverse spaces
+    ldy .POS_LINE
+    ldx .POS_COL
+    jsr locateCursor
+
+    +load16BitImmediate .SIX_SPACE_REVERSE, .DATA_PTR
+    lda #06
+    jsr printStr
+
+    ; iterate over cells
+    inc .CELL_COUNT
+    lda #16
+    cmp .CELL_COUNT
+    beq .doneRender
+    jmp .nextCellRender
+.doneRender
     rts               
 
 !ct scr
@@ -78,12 +195,12 @@ renderPlayingField
 ; --------------------------------------------------
 renderPoints
     ; set output color: 
-    lda #COLOR_BLACK
+    lda #COLOR_WHITE
     sta .CURRENT_COLOR
 
     ; set output position 
-    ldy #30
-    ldx #4
+    ldy #1                    ; column
+    ldx #10                   ; line
     jsr locateCursor
     
     ldy #00
@@ -110,7 +227,6 @@ renderPoints
     rts
 
 
-
 .OFFSET_ADR
 !byte $00, $00
 .OFFSET_TMP
@@ -125,7 +241,7 @@ locateCursor
     lda #0
     ; put line number in .OFFSET_ADR
     sta .OFFSET_ADR+1
-    stx .OFFSET_ADR
+    sty .OFFSET_ADR
     ; copy line number to .OFFSET_TMP
     +move16Bit .OFFSET_ADR, .OFFSET_TMP
     ; multiply line number by 32 
@@ -143,7 +259,7 @@ locateCursor
     ; .OFFSET_TMP = x pos
     lda #0
     sta .OFFSET_TMP+1
-    sty .OFFSET_TMP
+    stx .OFFSET_TMP
     +add16Bit .OFFSET_TMP, .OFFSET_ADR
     ; now set base address in screen and color ram
     +load16BitImmediate .SCREEN_RAM_BASE, .SCREEN_RAM
@@ -153,6 +269,8 @@ locateCursor
     rts
 
 
+.CLR_LINE_COUNT
+!byte $00
 ; --------------------------------------------------
 ; clearScreen fills all characters on screen with space.
 ; 
@@ -160,19 +278,28 @@ locateCursor
 ; OUTPUT: None
 ; --------------------------------------------------
 clearScreen
+    lda #0
+    sta .CLR_LINE_COUNT
+
+.nextLineClr
+    ldy .CLR_LINE_COUNT
     ldx #0
-.nextLine
-    ldy #0
     jsr locateCursor
+
     lda #32
-.nextCell    
-    sta (.SCREEN_RAM), y
+    ldy #0
+
+.nextCharClr
+    sta (.SCREEN_RAM), Y
     iny
     cpy #40
-    bne .nextCell
-    inx 
-    cpx #25
-    bne .nextLine
+    bne .nextCharClr
+
+    inc .CLR_LINE_COUNT
+    lda #25
+    cmp .CLR_LINE_COUNT
+    bne .nextLineClr
+
     rts
     
 
@@ -209,3 +336,26 @@ printChar
     lda .PRINT_TMP
     rts
 
+.STR_LEN 
+!byte $00
+.TMP_YREG
+!byte $00
+; --------------------------------------------------
+; printStr prints a string starting at address given in $A7/$A8
+; 
+; INPUT:  Accu contains the length of the string to print
+; OUTPUT: None
+; --------------------------------------------------
+printStr
+    sta .STR_LEN
+    sty .TMP_YREG
+    ldy #0
+.nextStrChar
+    lda (.DATA_PTR), Y
+    jsr printChar
+    iny
+    cpy .STR_LEN
+    bne .nextStrChar
+    ldy .TMP_YREG
+
+    rts
