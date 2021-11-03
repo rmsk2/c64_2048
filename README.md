@@ -7,7 +7,7 @@ The makefile creates a D64 disk image (`t2048.d64`) that can be loaded by C64 em
 `LOAD "T2048",8,1` and then `SYS 49152` to run the game.
 
 The game itself defaults to keyboard control. If you `POKE` a nonzero value to the address 
-`USE_JOYSTICK` then a joystick in port 2 is used instead. Here is a descrption of the controls:
+`USE_JOYSTICK` then a joystick in port 2 is used instead. Here is a description of the controls:
 
 | Operation | Keypress | Joystick |
 |-----------|----------|----------|
