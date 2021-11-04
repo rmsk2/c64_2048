@@ -4,6 +4,8 @@
 .COLOR_RAM_BASE =  $D800
 .FRAME_COLOR_ADR = $D020
 .BACKGROUND_COLOR_ADR = $D021
+.ORIGIN_LINE = 4
+.ORIGIN_COL = 6 
 
 COLOR_BLACK = 0
 COLOR_WHITE = 1
@@ -61,25 +63,25 @@ deInitDrawing
 
 
 .DATA_CELL_POS
-!byte 4, 4            ; line, column cell 0
-!byte 4, 11           ; line, column cell 1 
-!byte 4, 18           ; line, column cell 2
-!byte 4, 25           ; line, column cell 3
+!byte .ORIGIN_LINE, .ORIGIN_COL            ; line, column cell 0
+!byte .ORIGIN_LINE, .ORIGIN_COL + 7        ; line, column cell 1 
+!byte .ORIGIN_LINE, .ORIGIN_COL + 14       ; line, column cell 2
+!byte .ORIGIN_LINE, .ORIGIN_COL + 21       ; line, column cell 3
 
-!byte 8, 4            ; line, column cell 4
-!byte 8, 11           ; line, column cell 5 
-!byte 8, 18           ; line, column cell 6
-!byte 8, 25           ; line, column cell 7
+!byte .ORIGIN_LINE + 4, .ORIGIN_COL        ; line, column cell 4
+!byte .ORIGIN_LINE + 4, .ORIGIN_COL + 7    ; line, column cell 5 
+!byte .ORIGIN_LINE + 4, .ORIGIN_COL + 14   ; line, column cell 6
+!byte .ORIGIN_LINE + 4, .ORIGIN_COL + 21   ; line, column cell 7
 
-!byte 12, 4           ; line, column cell 8
-!byte 12, 11          ; line, column cell 9 
-!byte 12, 18          ; line, column cell 10
-!byte 12, 25          ; line, column cell 11
+!byte .ORIGIN_LINE + 8, .ORIGIN_COL        ; line, column cell 8
+!byte .ORIGIN_LINE + 8, .ORIGIN_COL + 7    ; line, column cell 9 
+!byte .ORIGIN_LINE + 8, .ORIGIN_COL + 14   ; line, column cell 10
+!byte .ORIGIN_LINE + 8, .ORIGIN_COL + 21   ; line, column cell 11
 
-!byte 16, 4           ; line, column cell 12
-!byte 16, 11          ; line, column cell 13 
-!byte 16, 18          ; line, column cell 14
-!byte 16, 25          ; line, column cell 15
+!byte .ORIGIN_LINE + 12, .ORIGIN_COL       ; line, column cell 12
+!byte .ORIGIN_LINE + 12, .ORIGIN_COL + 7   ; line, column cell 13 
+!byte .ORIGIN_LINE + 12, .ORIGIN_COL + 14  ; line, column cell 14
+!byte .ORIGIN_LINE + 12, .ORIGIN_COL + 21  ; line, column cell 15
 
 .SIX_SPACE_REVERSE
 !byte $A0, $A0, $A0, $A0, $A0, $A0
@@ -105,6 +107,16 @@ deInitDrawing
 !byte $A0, $A0, $B5, $B1, $B2, $A0, COLOR_PINK, $00        ; value 9 => 512
 !byte $A0, $B1, $B0, $B2, $B4, $A0, COLOR_LIGHT_BLUE, $00  ; value 10 => 1024
 !byte $A0, $B2, $B0, $B4, $B8, $A0, COLOR_LIGHT_GREEN, $00 ; value 11 => 2048
+
+!macro printAtPos .line, .col, .strAddr, .ptr, .len { 
+    ldy .line
+    ldx .col
+    jsr locateCursor
+
+    +load16BitImmediate .strAddr, .ptr
+    lda #.len
+    jsr printStr    
+}
 
 .POS_LINE !byte $00
 .POS_COL  !byte $00
@@ -160,37 +172,19 @@ renderPlayingField
     sta .CURRENT_COLOR
 
     ; write six reverse space characters
-    ldy .POS_LINE
-    ldx .POS_COL
-    jsr locateCursor
-
-    +load16BitImmediate .SIX_SPACE_REVERSE, .DATA_PTR
-    lda #06
-    jsr printStr
+    +printAtPos .POS_LINE, .POS_COL, .SIX_SPACE_REVERSE, .DATA_PTR, 6
 
     ; increment line count
     inc .POS_LINE
 
     ; write cell text
-    ldy .POS_LINE
-    ldx .POS_COL
-    jsr locateCursor
-
-    +load16BitImmediate .CELL_TEXT, .DATA_PTR
-    lda #06
-    jsr printStr
+    +printAtPos .POS_LINE, .POS_COL, .CELL_TEXT, .DATA_PTR, 6
 
     ; increment line count
     inc .POS_LINE
 
     ; write six reverse spaces
-    ldy .POS_LINE
-    ldx .POS_COL
-    jsr locateCursor
-
-    +load16BitImmediate .SIX_SPACE_REVERSE, .DATA_PTR
-    lda #06
-    jsr printStr
+    +printAtPos .POS_LINE, .POS_COL, .SIX_SPACE_REVERSE, .DATA_PTR, 6
 
     ; iterate over cells
     inc .CELL_COUNT
@@ -217,8 +211,8 @@ renderPoints
     sta .CURRENT_COLOR
 
     ; set output position 
-    ldy #1                    ; line
-    ldx #14                   ; column
+    ldy #.ORIGIN_LINE - 3      ; line
+    ldx #.ORIGIN_COL + 21     ; column
     jsr locateCursor
     
     ldy #00
@@ -378,9 +372,24 @@ printStr
 
     rts
 
+
+!macro printAtPosImmediate .line, .col, .strAddr, .ptr, .len { 
+    ldy #.line
+    ldx #.col
+    jsr locateCursor
+
+    +load16BitImmediate .strAddr, .ptr
+    lda #.len
+    jsr printStr    
+}
+
 !ct scr
 .GAME_OVER_CHARS
 !tx "game over"
+.PLAY_IT_AGAIN
+!tx " play again (y/n)? "
+.BLANKS
+!tx "                   "
 !ct pet
 ; --------------------------------------------------
 ; gameOver prints GAME OVER on the screen
@@ -389,17 +398,23 @@ printStr
 ; OUTPUT: None
 ; --------------------------------------------------
 gameOver
-    ; set output color: 
+    ; set output color 
     lda #COLOR_RED
     sta .CURRENT_COLOR
 
     ; set output position 
-    ldy #1                    ; line
-    ldx #4                    ; column
-    jsr locateCursor
+    +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .GAME_OVER_CHARS, .DATA_PTR, 9
 
-    +load16BitImmediate .GAME_OVER_CHARS, .DATA_PTR
-    lda #9                    ; length is 9 bytes
-    jsr printStr
+    ; set output color 
+    lda #COLOR_BLACK
+    sta .CURRENT_COLOR
+
+    +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, 19
+    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, 19
+
+    lda #COLOR_RED
+    sta .CURRENT_COLOR    
+
+    +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .PLAY_IT_AGAIN, .DATA_PTR, 19  
 
     rts

@@ -32,15 +32,21 @@ main
 
 .mainLoop
     jsr add2AtRandomPos
+    jsr renderPlayingField
 
     jsr areMoreMovesPossible
     cmp #NO_POSSIBLE_MOVES_LEFT
     bne .invalidPress
     jsr gameOver
+.askPlayAgain
+    jsr waitForKey
+    cmp #89
+    beq main
+    cmp #78
+    beq .mainDone
+    jmp .askPlayAgain
 
 .invalidPress
-    jsr renderPlayingField
-
     lda USE_JOYSTICK
     bne .useJoystick 
     jsr waitForKey
