@@ -4,7 +4,7 @@ functionality is missing or lacking. It has to be assembled with the `ACME` macr
 It also uses the `c1541` tool delivered with the `VICE` emulator to create the disk image. 
 
 The makefile creates a D64 disk image (`t2048.d64`) that can be loaded by C64 emulators. Use 
-`LOAD "T2048",8,1` and then `SYS 49152` to run the game.
+`LOAD "T2048",8` and then `RUN` to run the game.
 
 The game itself defaults to keyboard control. If you `POKE` a nonzero value to the address 
 `USE_JOYSTICK` then a joystick in port 2 is used instead. Here is a description of the controls:

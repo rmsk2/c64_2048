@@ -1,5 +1,8 @@
 !to "t2048", cbm
-*=$c000
+;*=$c000
+
+ *=$0801
+ !byte $0c,$08,$e5,$07,$9e,$20,$32,$30,$36,$32,$00,$00,$00
 
 !source "arith16.a"
 !zone main
@@ -650,26 +653,27 @@ clockLFSR
 .skip2
     rts
 
-
+PLACEMENT_SUCCESS = 0
+PLACEMENT_FAIL = 1
 ;--------------------------------------------------
 ; add2AtRandomPos adds a "2" to the playing field at a random location
 ; 
 ; INPUT:  None
-; OUTPUT: accumulator contains a zero, if the "2" was placed successfully. Otherwise a 1
-;         is written to the accu. This means all elements of the playing field are already
-;         used. 
+; OUTPUT: accumulator contains PLACEMENT_SUCCESS, if the "2" was placed successfully. 
+;         Otherwise a PLACEMENT_FAIL is written to the accu. This means all elements of 
+;         the playing field are already used. 
 ; --------------------------------------------------
 add2AtRandomPos
     ; check if there is an empty space on the playing field
     jsr countUnusedElements
     cmp #0
     bne .continueAdd2
-    lda #1
+    lda #PLACEMENT_FAIL
     rts                                     ; no free space was found
 
     ; here we know that at least one free element exists
 .continueAdd2
-    ; clear result
+    ; clear LFSR result
     lda #0
     sta LFSR_RESULT
     ; get 4 pseudorandom bits
@@ -692,7 +696,7 @@ add2AtRandomPos
 .foundFreeElement
     lda #01
     sta PLAYINGFIELD, X                    ; write a "2" at position X
-    lda #00                                ; all OK => return 0
+    lda #PLACEMENT_SUCCESS                 ; all OK => return 0
     rts
 
 !source "t2048draw.a"

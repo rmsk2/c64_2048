@@ -84,6 +84,14 @@ deInitDrawing
 .SIX_SPACE_REVERSE
 !byte $A0, $A0, $A0, $A0, $A0, $A0
 
+; This table contains 11 instances of a data structure that holds
+;
+; 1. 6 bytes of text which are displayed in the second line of each rendered cell.
+;    The data is not encoded in ASCII. It is given in screen code values.
+; 2. One byte for the color which is used to render the whole cell
+; 3. One fill byte in order to make length a power of two, here 8. This allows
+;    for easy access in absence of a mutliplication instruction
+;
 .DATA_CELL_VALUES
 !byte $A0, $A0, $A0, $A0, $A0, $A0, COLOR_LIGHT_GREY, $00       ; value 0
 !byte $A0, $A0, $A0, $B2, $A0, $A0, COLOR_RED, $00         ; value 1 => 2
