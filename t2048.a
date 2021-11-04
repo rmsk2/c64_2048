@@ -29,7 +29,13 @@ main
 
 .mainLoop
     jsr add2AtRandomPos
-.invaidPress
+
+    jsr areMoreMovesPossible
+    cmp #NO_POSSIBLE_MOVES_LEFT
+    bne .invalidPress
+    jsr gameOver
+
+.invalidPress
     jsr renderPlayingField
 
     lda USE_JOYSTICK
@@ -50,7 +56,7 @@ main
     beq .userInputRight
     cmp #75                             ; K => Kuit ;-)
     beq .mainDone
-    bne .invaidPress
+    bne .invalidPress
 .userInputUp
     jsr shiftUp
     jmp .mainLoop
@@ -189,27 +195,113 @@ restorePlayingField
     +copyField OLDPLAYINGFIELD, PLAYINGFIELD           
 
 
+NO_CHANGE_DETECTED = 0
+CHANGE_DETECTED = 1
 ; --------------------------------------------------
 ; testPlayingFieldChanged compares PLAYINGFIELD to OLDPLAYINGFIELD.
 ; 
 ; INPUT:  None
-; OUTPUT: 0 in accu if no change was detected. 1 otherwise
+; OUTPUT: NO_CHANGE_DETECTED in accu if no change was detected. CHANGE_DETECTED otherwise
 ; --------------------------------------------------
 testPlayingFieldChanged 
-    ldy #0                ; byte counter
+    ldy #0                   ; byte counter
 .charLoop3    
     lda PLAYINGFIELD,Y
-    cmp OLDPLAYINGFIELD,y ; compare old with current
-    bne .changeDetected   ; current pos differs => return
-    iny                   ; increment byte counter
-    cpy #16               ; end pos reached?
-    bne .charLoop3        ; no, test next pos
-    lda #0                ; playing fields does not differ
+    cmp OLDPLAYINGFIELD,y    ; compare old with current
+    bne .changeDetected      ; current pos differs => return
+    iny                      ; increment byte counter
+    cpy #16                  ; end pos reached?
+    bne .charLoop3           ; no, test next pos
+    lda #NO_CHANGE_DETECTED  ; playing fields does not differ
     rts
-.changeDetected           ; playing fields differ
-    lda #1
+.changeDetected              ; playing fields differ
+    lda #CHANGE_DETECTED
     rts               
 
+
+!macro makeTestMove .shiftRoutine {
+    jsr .shiftRoutine
+    jsr testPlayingFieldChanged
+    cmp #NO_CHANGE_DETECTED
+    beq .testNextMove
+    lda #POSSIBLE_MOVES_LEFT
+    sta CHECK_RES
+    jmp doneMoves
+.testNextMove
+}
+
+POSSIBLE_MOVES_LEFT = 1
+NO_POSSIBLE_MOVES_LEFT = 0
+CHECK_RES
+!byte $00
+.SAVE_RESULT
+!byte $00, $00, $00
+; --------------------------------------------------
+; areMoreMovesPossible checks, if there are valid moves left. This routine
+; simply tests all possible moves. If one move is detected that changes the
+; playing field then there are still possible moves ;-).
+; 
+; INPUT:  None
+; OUTPUT: POSSIBLE_MOVES_LEFT in accu if there are still moves possible, NO_POSSIBLE_MOVES_LEFT otherwise
+; --------------------------------------------------
+areMoreMovesPossible
+    jsr savePlayingField
+    ; save current results
+    lda POINTS
+    sta .SAVE_RESULT
+    lda POINTS+1
+    sta .SAVE_RESULT+1
+    lda POINTS+2
+    sta .SAVE_RESULT+2
+
+    ; default return value is that there are no possible moves
+    lda #NO_POSSIBLE_MOVES_LEFT
+    sta CHECK_RES
+
+    +makeTestMove shiftLeft
+
+    jsr restorePlayingField
+    +makeTestMove shiftRight
+
+    jsr restorePlayingField
+    +makeTestMove shiftUp
+
+    jsr restorePlayingField  
+    +makeTestMove shiftDown
+    
+doneMoves
+    lda .SAVE_RESULT
+    sta POINTS
+    lda .SAVE_RESULT+1
+    sta POINTS+1
+    lda .SAVE_RESULT+2
+    sta POINTS+2
+
+    jsr restorePlayingField
+    lda CHECK_RES
+    rts
+
+;--------------------------------------------------
+; countUnusedElements counts all elements with a zero contents on the 
+; playing field
+; 
+; INPUT:  None
+; OUTPUT: Number of unused elemnts in accu
+; --------------------------------------------------
+countUnusedElements
+    ldx #0
+    ldy #0
+.loopCountUnused
+    lda PLAYINGFIELD,X
+    bne .notZero              ; non zero element found. Skip increment result count
+    iny
+.notZero
+    inx
+    cpx #16
+    bne .loopCountUnused
+    tya
+
+    rts
 
 ;--------------------------------------------------
 ; clearPlayingField sets all values in the playing field to 0.
@@ -279,6 +371,7 @@ addPoints
     ; add carry to most significant digits of result counter
     lda POINTS
     adc #00
+    sta POINTS
     cld 
     rts
 
@@ -493,6 +586,7 @@ LFSR_CARRY
 ; INPUT:  None
 ; OUTPUT: Each clocking results in a new bit shifted fron the left into LFSR_RESULT 
 ; --------------------------------------------------
+; Source https://www.maximintegrated.com/en/design/technical-documents/app-notes/4/4400.html
 ; int shift_lfsr(uint *lfsr, uint polynomial_mask)
 ; {
 ;     int feedback;
@@ -560,15 +654,21 @@ clockLFSR
 ;--------------------------------------------------
 ; add2AtRandomPos adds a "2" to the playing field at a random location
 ; 
-; THIS ROUTINE HAS TO BE IMPROVED. SEARCHING FOR THE NEXT FREE POSITION CREATES
-; PERCEPTIBLE PATTERNS.
-;
 ; INPUT:  None
 ; OUTPUT: accumulator contains a zero, if the "2" was placed successfully. Otherwise a 1
 ;         is written to the accu. This means all elements of the playing field are already
 ;         used. 
 ; --------------------------------------------------
 add2AtRandomPos
+    ; check if there is an empty space on the playing field
+    jsr countUnusedElements
+    cmp #0
+    bne .continueAdd2
+    lda #1
+    rts                                     ; no free space was found
+
+    ; here we know that at least one free element exists
+.continueAdd2
     ; clear result
     lda #0
     sta LFSR_RESULT
@@ -578,22 +678,17 @@ add2AtRandomPos
     jsr clockLFSR
     jsr clockLFSR
 
-    ldy #00                                ; counts the number of attempts
-    ldx LFSR_RESULT                        ; position to look at
+    ldx LFSR_RESULT                        ; position to look at in X-register‚
 .tryNextPosition
     lda PLAYINGFIELD, X                    ; zero flag is set when loaded value is zero
     beq .foundFreeElement                  ; a zero was loaded, i.e. field is empty  => write "2" 
-    inx
-    ; increment search pos by one mod 16
-    txa
-    and #$0F
-    tax
-    ; increment number of attempts
-    iny
-    cpy #16
-    bne .tryNextPosition
-    lda #01                                ; no free position was found => return 1
-    rts
+
+    jsr clockLFSR                          ; get one more pseudorandom bit
+    lda #$0F
+    and LFSR_RESULT                        ; mask out the lower four bit of LFSR_RESULT
+    tax                                    ; load new position in X register
+    jmp .tryNextPosition
+
 .foundFreeElement
     lda #01
     sta PLAYINGFIELD, X                    ; write a "2" at position X

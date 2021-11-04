@@ -209,8 +209,8 @@ renderPoints
     sta .CURRENT_COLOR
 
     ; set output position 
-    ldy #1                    ; column
-    ldx #10                   ; line
+    ldy #1                    ; line
+    ldx #14                   ; column
     jsr locateCursor
     
     ldy #00
@@ -367,5 +367,31 @@ printStr
     cpy .STR_LEN
     bne .nextStrChar
     ldy .TMP_YREG
+
+    rts
+
+!ct scr
+.GAME_OVER_CHARS
+!tx "game over"
+!ct pet
+; --------------------------------------------------
+; gameOver prints GAME OVER on the screen
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+gameOver
+    ; set output color: 
+    lda #COLOR_RED
+    sta .CURRENT_COLOR
+
+    ; set output position 
+    ldy #1                    ; line
+    ldx #4                    ; column
+    jsr locateCursor
+
+    +load16BitImmediate .GAME_OVER_CHARS, .DATA_PTR
+    lda #9                    ; length is 9 bytes
+    jsr printStr
 
     rts
