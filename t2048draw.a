@@ -441,3 +441,25 @@ youWin
     +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .YOU_WIN_CHARS, .DATA_PTR, 8
 
     jmp printQuestionFrame
+
+
+
+!ct scr
+.INPUT_QUESTION
+!tx "use joystick or keyboard (j/k)?"
+!ct pet
+; --------------------------------------------------
+; askInputSelection 
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+askInputSelection
+    ; set output color 
+    lda #COLOR_RED
+    sta .CURRENT_COLOR
+
+    ; set output position 
+    +printAtPosImmediate 12, 0, .INPUT_QUESTION, .DATA_PTR, 31
+
+    rts

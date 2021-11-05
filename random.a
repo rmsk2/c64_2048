@@ -1,5 +1,21 @@
 !zone random
 
+initRandom
+    ; Init PRNG
+    lda #00
+    sta LFSR_RESULT                       ; clear LFSR result
+    jsr .getSeed
+    
+    ; Add current uptime to LFSR_STATE
+    lda SEED_BYTES
+    eor LFSR_STATE + 1
+    sta LFSR_STATE + 1
+    lda SEED_BYTES + 1
+    eor LFSR_STATE + 2
+    sta LFSR_STATE + 2
+
+    rts    
+
 LFSR_STATE
     !byte $37, $AF, $BE
 LFSR_RESULT
@@ -79,35 +95,13 @@ clockLFSR
     rts
 
 
-getSeed
-    lda #$ff  ; maximum frequency value
-    sta $d40e ; voice 3 frequency low byte
-    sta $d40f ; voice 3 frequency high byte
-    lda #$80  ; noise waveform, gate bit off
-    sta $d412 ; voice 3 control register
-
-    lda $d41b
-    sta .BYTES
-
-    ; wait for some time
-    ldy #0
-.count
-    iny
-    bne .count
-    
-    lda $d41b
-    sta .BYTES+1
-
-    ; wait again for some time
-    ldy #00
-.count2
-    iny
-    bne .count2
-    
-    lda $d41b
-    sta .BYTES+2
+.getSeed
+    lda $A1
+    sta SEED_BYTES
+    lda $A2
+    sta SEED_BYTES+1
     
     rts
 
-.BYTES
-!byte $00, $00, $00
+SEED_BYTES
+!byte $00, $00

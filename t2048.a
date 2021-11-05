@@ -5,13 +5,33 @@
  !byte $0c,$08,$e5,$07,$9e,$20,$32,$30,$36,$32,$00,$00,$00
 
 !source "arith16.a"
-!source "random.a"
+
 !zone main
 GETIN   = $FFE4
 JOYSTICK2 = $DC00
+KEYBOARD_SELECTED = 0
+JOYSTICK_SELECTED = 1
 
 main
     jsr initDrawing
+    lda #KEYBOARD_SELECTED
+    sta USE_JOYSTICK
+
+    jsr askInputSelection
+.askInputDevice
+    jsr waitForKey
+    cmp #$4a                    ; j => joystick
+    beq .selectJoystick
+    cmp #$4b                    ; k => keyboard
+    beq .newGame
+    jmp .askInputDevice         ; neither y nor n => try again
+
+.selectJoystick
+    lda #JOYSTICK_SELECTED
+    sta USE_JOYSTICK
+
+.newGame
+    jsr clearScreen
     jsr clearPlayingField
     
     ; clear result counter
@@ -20,21 +40,17 @@ main
     sta POINTS+1
     sta POINTS+2
 
-    ; Init PRNG
-    sta LFSR_RESULT                       ; clear LFSR result
-    
-    ; Add current uptime to LFSR_STATE
-    lda $A0
-    eor LFSR_STATE + 1
-    sta LFSR_STATE + 1
-    lda $A1
-    eor LFSR_STATE + 2
-    sta LFSR_STATE + 2
-
+    jsr initRandom
+    jsr savePlayingField
     jsr add2AtRandomPos
 
 .mainLoop
+    jsr testPlayingFieldChanged
+    cmp #NO_CHANGE_DETECTED
+    beq .moveWasInvalid
+
     jsr add2AtRandomPos
+.moveWasInvalid
     jsr renderPlayingField
 
     jsr lookForEleven
@@ -46,7 +62,7 @@ main
     jmp .askPlayAgain
 
 .checkGameOver
-    jsr areMoreMovesPossible
+    jsr areMoreMovesPossible     ; this saves the playing field
     cmp #NO_POSSIBLE_MOVES_LEFT
     bne .waitForInput            ; There are still possible moves. Wait for next input
 
@@ -57,7 +73,7 @@ main
 .askPlayAgain
     jsr waitForKey
     cmp #89                     ; y => restart game
-    beq main
+    beq .newGame
     cmp #78                     ; n => quit game
     beq .mainDone
     jmp .askPlayAgain           ; neither y nor n => try again
@@ -674,6 +690,8 @@ add2AtRandomPos
     rts
 
 !source "t2048draw.a"
+!source "random.a"
+
 
 ;TEST=0
 !ifdef TEST {
