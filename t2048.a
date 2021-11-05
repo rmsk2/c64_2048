@@ -14,6 +14,7 @@ JOYSTICK_SELECTED = 1
 
 main
     jsr initDrawing
+
     lda #KEYBOARD_SELECTED
     sta USE_JOYSTICK
 
@@ -31,6 +32,7 @@ main
     sta USE_JOYSTICK
 
 .newGame
+    jsr initRandom
     jsr clearScreen
     jsr clearPlayingField
     
@@ -40,7 +42,6 @@ main
     sta POINTS+1
     sta POINTS+2
 
-    jsr initRandom
     jsr savePlayingField
     jsr add2AtRandomPos
 
