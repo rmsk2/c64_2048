@@ -45,7 +45,7 @@ main
     jsr add2AtRandomPos
 
 .mainLoop
-    jsr testPlayingFieldChanged
+    jsr testPlayingFieldChanged   ; compare to playing field saved before last move
     cmp #NO_CHANGE_DETECTED
     beq .moveWasInvalid
 
@@ -62,7 +62,7 @@ main
     jmp .askPlayAgain
 
 .checkGameOver
-    jsr areMoreMovesPossible     ; this saves the playing field
+    jsr areMoreMovesPossible     ; this also saves the playing field
     cmp #NO_POSSIBLE_MOVES_LEFT
     bne .waitForInput            ; There are still possible moves. Wait for next input
 
