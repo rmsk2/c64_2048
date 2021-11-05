@@ -89,6 +89,7 @@ getSeed
     lda $d41b
     sta .BYTES
 
+    ; wait for some time
     ldy #0
 .count
     iny
@@ -97,6 +98,7 @@ getSeed
     lda $d41b
     sta .BYTES+1
 
+    ; wait again for some time
     ldy #00
 .count2
     iny
