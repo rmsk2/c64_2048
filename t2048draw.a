@@ -95,7 +95,7 @@ deInitDrawing
 ;    for easy access in absence of a mutliplication instruction
 ;
 .DATA_CELL_VALUES
-!byte $A0, $A0, $A0, $A0, $A0, $A0, COLOR_LIGHT_GREY, $00       ; value 0
+!byte $A0, $A0, $A0, $A0, $A0, $A0, COLOR_LIGHT_GREY, $00  ; value 0
 !byte $A0, $A0, $A0, $B2, $A0, $A0, COLOR_RED, $00         ; value 1 => 2
 !byte $A0, $A0, $A0, $B4, $A0, $A0, COLOR_CYAN, $00        ; value 2 => 4
 !byte $A0, $A0, $A0, $B8, $A0, $A0, COLOR_PURPLE, $00      ; value 3 => 8
@@ -405,6 +405,7 @@ gameOver
     ; set output position 
     +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .GAME_OVER_CHARS, .DATA_PTR, 9
 
+printQuestionFrame
     ; set output color 
     lda #COLOR_BLACK
     sta .CURRENT_COLOR
@@ -418,3 +419,25 @@ gameOver
     +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .PLAY_IT_AGAIN, .DATA_PTR, 19  
 
     rts
+
+
+!ct scr
+.YOU_WIN_CHARS
+!tx "you win!"
+!ct pet
+
+; --------------------------------------------------
+; youWin informs the player that the game was won
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+youWin
+    ; set output color 
+    lda #COLOR_RED
+    sta .CURRENT_COLOR
+
+    ; set output position 
+    +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .YOU_WIN_CHARS, .DATA_PTR, 8
+
+    jmp printQuestionFrame
