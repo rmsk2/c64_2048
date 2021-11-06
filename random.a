@@ -1,10 +1,7 @@
 !zone random
 
 SID_BASE = $D400
-SID_NO = 0
-SID_YES = 1
-
-.USE_SID = SID_YES
+USE_SID = 1
 
 initRandom
     ; Init PRNG
@@ -20,7 +17,7 @@ initRandom
     eor LFSR_STATE + 2
     sta LFSR_STATE + 2
 
-!if .USE_SID = SID_YES {
+!ifdef USE_SID {
     ldx #15                           
     jsr qeuerySID                  ; read 15 cycles
 

@@ -6,8 +6,8 @@ It also uses the `c1541` tool delivered with the `VICE` emulator to create the d
 The makefile creates a D64 disk image (`t2048.d64`) that can be loaded by C64 emulators. Use 
 `LOAD "T2048",8` and then `RUN` to run the game.
 
-The game itself defaults to keyboard control. If you `POKE` a nonzero value to the address 
-`USE_JOYSTICK` then a joystick in port 2 is used instead. Here is a description of the controls:
+After starting the game you can choose whether you want to control the game by keyboard or joystick.
+Here is a description of the controls:
 
 | Operation | Keypress | Joystick |
 |-----------|----------|----------|
@@ -16,5 +16,8 @@ The game itself defaults to keyboard control. If you `POKE` a nonzero value to t
 | Shift playfield left | `A` | Left |
 | Shift playfield right | `D` | Right |
 | Quit game | `K` | Fire |
+
+The game is won by the player when a tile with the value 2 to the power of eleven or 2048 appears on 
+the playing field.
 
 Screenshot:![](/t2048.png?raw=true "Screenshot of game")
