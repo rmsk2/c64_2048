@@ -461,25 +461,59 @@ youWin
 !tx "zwei hoch 11. by martin grap (2021)"
 !ct pet
 
-.BIG_TWO
-!byte $20, $20, $20, $20, $20, $20, $20, $20
-!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20
-!byte $20, $20, $20, $20, $20, $A0, $A0, $20
-!byte $20, $20, $20, $20, $20, $A0, $A0, $20
-!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20
-!byte $20, $A0, $A0, $A0, $20, $20, $20, $20
-!byte $20, $A0, $A0, $A0, $20, $20, $20, $20
-!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20
+BIG_TWO
+!byte $20, $20, $20, $20, $20, $20, $20, $20 ; ________
+!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20 ; _******_
+!byte $20, $20, $20, $20, $20, $A0, $A0, $20 ; _____**_
+!byte $20, $20, $20, $20, $20, $A0, $A0, $20 ; _____**_
+!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20 ; _******_
+!byte $20, $A0, $A0, $20, $20, $20, $20, $20 ; _**_____
+!byte $20, $A0, $A0, $A0, $20, $20, $20, $20 ; _***____
+!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20 ; _******_
 
-.BIG_ONE
-!byte $20, $20, $20, $20, $20, $20, $20, $20
-!byte $20, $20, $20, $A0, $A0, $20, $20, $20
-!byte $20, $20, $20, $A0, $A0, $20, $20, $20
-!byte $20, $20, $20, $A0, $A0, $20, $20, $20
-!byte $20, $20, $20, $A0, $A0, $20, $20, $20
-!byte $20, $20, $A0, $A0, $A0, $20, $20, $20
-!byte $20, $20, $A0, $A0, $A0, $20, $20, $20
-!byte $20, $20, $A0, $A0, $A0, $20, $20, $20
+BIG_ONE
+!byte $20, $20, $20, $20, $20, $20, $20, $20 ; ________
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___**___
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___**___
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___**___
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___**___
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___**___
+!byte $20, $20, $A0, $A0, $A0, $20, $20, $20 ; __***___
+!byte $20, $20, $A0, $A0, $A0, $20, $20, $20 ; __***___
+
+
+BIG_BASE
+!byte $00, $00
+BIG_LINE_LEN
+!byte $00, $00
+BIG_LINE
+!byte 9
+BIG_COL
+!byte 10
+
+!macro printBigChar .line, .col, .charData, .dataPtr {
+    lda #.line
+    sta BIG_LINE
+    lda #.col
+    sta BIG_COL
+
+    +load16BitImmediate .charData, BIG_BASE
+
+    ldy #0
+.nextLineStartScreen
+    tya
+    pha
+    +printAtPosAddr BIG_LINE, BIG_COL, BIG_BASE, .dataPtr, 8
+    pla
+    tay
+
+    inc BIG_LINE
+    +add16Bit BIG_LINE_LEN, BIG_BASE
+        
+    iny
+    cpy #8
+    bne .nextLineStartScreen
+}
 
 ; --------------------------------------------------
 ; askInputSelection 
@@ -487,90 +521,15 @@ youWin
 ; INPUT:  None
 ; OUTPUT: None
 ; --------------------------------------------------
-.BIG_TWO_LINE
-!byte 9
-.BIG_TWO_COL
-!byte 10
-.BIG_TWO_BASE
-!byte $00, $00
-.BIG_TWO_LINE_LEN
-!byte $00, $00
 askInputSelection
     lda #COLOR_BLUE
     sta .CURRENT_COLOR
 
-    lda #9
-    sta .BIG_TWO_LINE
-    lda #10
-    sta .BIG_TWO_COL
+    +load16BitImmediate 8, BIG_LINE_LEN
 
-    +load16BitImmediate 8, .BIG_TWO_LINE_LEN
-
-    ; -------- print big 2 -------------
-    +load16BitImmediate .BIG_TWO, .BIG_TWO_BASE
-
-    ldy #0
-.nextLineStartScreen
-    tya
-    pha
-    +printAtPosAddr .BIG_TWO_LINE, .BIG_TWO_COL, .BIG_TWO_BASE, .DATA_PTR, 8
-    pla
-    tay
-
-    inc .BIG_TWO_LINE
-    +add16Bit .BIG_TWO_LINE_LEN, .BIG_TWO_BASE
-        
-    iny
-    cpy #8
-    bne .nextLineStartScreen
-
-    ; ------- print first big 1--------------
-
-    lda #1
-    sta .BIG_TWO_LINE
-    lda #17
-    sta .BIG_TWO_COL    
-    +load16BitImmediate .BIG_ONE, .BIG_TWO_BASE
-
-    ldy #0
-.nextLineStartScreen2
-    tya
-    pha
-    +printAtPosAddr .BIG_TWO_LINE, .BIG_TWO_COL, .BIG_TWO_BASE, .DATA_PTR, 8
-    pla
-    tay
-
-    inc .BIG_TWO_LINE
-    +add16Bit .BIG_TWO_LINE_LEN, .BIG_TWO_BASE
-        
-    iny
-    cpy #8
-    bne .nextLineStartScreen2
-
-    ; --------print second big 1 ----------------
-
-    lda #1
-    sta .BIG_TWO_LINE
-    lda #23
-    sta .BIG_TWO_COL    
-    +load16BitImmediate .BIG_ONE, .BIG_TWO_BASE
-
-    ldy #0
-.nextLineStartScreen3
-    tya
-    pha
-    +printAtPosAddr .BIG_TWO_LINE, .BIG_TWO_COL, .BIG_TWO_BASE, .DATA_PTR, 8
-    pla
-    tay
-
-    inc .BIG_TWO_LINE
-    +add16Bit .BIG_TWO_LINE_LEN, .BIG_TWO_BASE
-        
-    iny
-    cpy #8
-    bne .nextLineStartScreen3
-
-    ; ---------------------------------
+    +printBigChar 9, 10, BIG_TWO, .DATA_PTR
+    +printBigChar 1, 17, BIG_ONE, .DATA_PTR
+    +printBigChar 1, 23, BIG_ONE, .DATA_PTR
 
     ; set output color 
     lda #COLOR_RED

@@ -24,3 +24,5 @@ t2048: t2048.a t2048draw.a arith16.a tests.a random.a
 t2048.d64: t2048
 	$(C1541) -format t2048,2K d64 $(WORKDIR)/t2048.d64 -write $(WORKDIR)/t2048
 
+run: t2048.d64
+	x64sc t2048.d64
