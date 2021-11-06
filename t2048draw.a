@@ -536,8 +536,6 @@ askInputSelection
     sta .CURRENT_COLOR
 
     +printAtPosImmediate 20, 2, .AUTHOR, .DATA_PTR, 35
-
-    ; set output position 
     +printAtPosImmediate 24, 0, .INPUT_QUESTION, .DATA_PTR, 35
 
     rts
