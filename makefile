@@ -18,7 +18,7 @@ clean:
 	rm t2048.d64
 	rm t2048.txt
 
-t2048: t2048.a t2048draw.a arith16.a tests.a random.a
+t2048: t2048.a t2048draw.a arith16.a tests.a random.a font.a
 	$(ACME) -l t2048.txt t2048.a
 
 t2048.d64: t2048

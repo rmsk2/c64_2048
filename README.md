@@ -21,3 +21,4 @@ The game is won by the player when a tile with the value 2 to the power of eleve
 the playing field.
 
 Screenshot:![](/t2048.png?raw=true "Screenshot of game")
+Title screen:![](/zwei_hoch_title.png?raw=true "Title screen of game")

@@ -692,9 +692,15 @@ add2AtRandomPos
 
 !source "t2048draw.a"
 !source "random.a"
+!source "font.a"
 
 
 ;TEST=0
 !ifdef TEST {
 !source "tests.a"    
 }
+
+; label, which serves the purpose to detect when this programm becomes so big
+; that the code is cutting into the font at $3000
+END
+    nop
