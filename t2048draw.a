@@ -499,6 +499,11 @@ askInputSelection
     lda #COLOR_BLUE
     sta .CURRENT_COLOR
 
+    lda #9
+    sta .BIG_TWO_LINE
+    lda #10
+    sta .BIG_TWO_COL
+
     +load16BitImmediate 8, .BIG_TWO_LINE_LEN
 
     ; -------- print big 2 -------------
