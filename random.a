@@ -1,5 +1,10 @@
 !zone random
 
+SID_BASE = $D400
+SID_NO = 0
+SID_YES = 1
+.USE_SID = SID_YES
+
 initRandom
     ; Init PRNG
     lda #00
@@ -13,6 +18,29 @@ initRandom
     lda SEED_BYTES + 1
     eor LFSR_STATE + 2
     sta LFSR_STATE + 2
+
+!if .USE_SID = SID_YES {
+    ldx #15                           
+    jsr qeuerySID                  ; read 15 cycles
+
+    ; modify LFSR STATE with one byte read from SID
+    lda SID_BYTES
+    eor LFSR_STATE + 1
+    sta LFSR_STATE + 1
+
+    ; clock LFSR a number of times determined by values from SID
+    ldx SID_BYTES
+.moveLFSR
+    jsr clockLFSR
+    dex
+    bne .moveLFSR
+
+    ldx SID_BYTES+1
+.moveLFSR2
+    jsr clockLFSR
+    dex
+    bne .moveLFSR2    
+}
 
     rts    
 
@@ -104,4 +132,61 @@ clockLFSR
     rts
 
 SEED_BYTES
+!byte $00, $00
+
+!macro clearSID {
+    ldx #0
+    lda #0
+.loopRegister
+    sta SID_BASE, x
+    inx
+    cpx #25
+    bne .loopRegister
+}
+
+.TMP_SID_COUNT
+!byte $00
+;--------------------------------------------------
+; querySID reads a number of bytes from the SIDs white noise generator
+; 
+; INPUT:  x contains the number of cycles to perform
+; OUTPUT: Last two bytes read are stored in SID_BYTES 
+; --------------------------------------------------
+qeuerySID
+    ; save counter in memory
+    stx .TMP_SID_COUNT
+    ldx #0
+
+    +clearSID
+
+    lda #$ff  ; maximum frequency value
+    sta $d40e ; voice 3 frequency low byte
+    sta $d40f ; voice 3 frequency high byte
+    lda #$80  ; noise waveform, gate bit off
+    sta $d412 ; voice 3 control register
+
+.nextCycle
+    ; read first byte
+    lda $d41b
+    sta SID_BYTES
+
+    ; wait in order to make sure a new value is ready
+    ldy #0
+.count
+    iny
+    bne .count
+
+    ; read second byte
+    lda $d41b
+    sta SID_BYTES+1
+
+    inx
+    cpx .TMP_SID_COUNT         ; number of intended cycles reached?
+    bne .nextCycle             ; no
+
+    +clearSID 
+
+    rts
+
+SID_BYTES
 !byte $00, $00
