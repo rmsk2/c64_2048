@@ -3,6 +3,7 @@
 SID_BASE = $D400
 SID_NO = 0
 SID_YES = 1
+
 .USE_SID = SID_YES
 
 initRandom
@@ -166,15 +167,21 @@ qeuerySID
     sta $d412 ; voice 3 control register
 
 .nextCycle
+    ; wait in order to make sure a new value is ready
+    ldy #0
+.count1
+    iny
+    bne .count1
+
     ; read first byte
     lda $d41b
     sta SID_BYTES
 
     ; wait in order to make sure a new value is ready
     ldy #0
-.count
+.count2
     iny
-    bne .count
+    bne .count2
 
     ; read second byte
     lda $d41b
