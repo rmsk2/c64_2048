@@ -444,20 +444,134 @@ youWin
 
 
 
+!macro printAtPosAddr .line, .col, .strAddr, .ptr, .len { 
+    ldy .line
+    ldx .col
+    jsr locateCursor
+
+    +move16Bit .strAddr, .ptr
+    lda #.len
+    jsr printStr    
+}
+
 !ct scr
 .INPUT_QUESTION
 !tx "    use joystick or keyboard (j/k)?"
+.AUTHOR
+!tx "zwei hoch 11. by martin grap (2021)"
 !ct pet
+
+.BIG_TWO
+!byte $20, $20, $20, $20, $20, $20, $20, $20
+!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20
+!byte $20, $20, $20, $20, $20, $A0, $A0, $20
+!byte $20, $20, $20, $20, $20, $A0, $A0, $20
+!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20
+!byte $20, $A0, $A0, $A0, $20, $20, $20, $20
+!byte $20, $A0, $A0, $A0, $20, $20, $20, $20
+!byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20
+
+.BIG_ONE
+!byte $20, $20, $20, $20, $20, $20, $20, $20
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20
+!byte $20, $20, $A0, $A0, $A0, $20, $20, $20
+!byte $20, $20, $A0, $A0, $A0, $20, $20, $20
+!byte $20, $20, $A0, $A0, $A0, $20, $20, $20
+
 ; --------------------------------------------------
 ; askInputSelection 
 ; 
 ; INPUT:  None
 ; OUTPUT: None
 ; --------------------------------------------------
+.BIG_TWO_LINE
+!byte 9
+.BIG_TWO_COL
+!byte 10
+.BIG_TWO_BASE
+!byte $00, $00
+.BIG_TWO_LINE_LEN
+!byte $00, $00
 askInputSelection
+    lda #COLOR_BLUE
+    sta .CURRENT_COLOR
+
+    +load16BitImmediate 8, .BIG_TWO_LINE_LEN
+
+    ; -------- print big 2 -------------
+    +load16BitImmediate .BIG_TWO, .BIG_TWO_BASE
+
+    ldy #0
+.nextLineStartScreen
+    tya
+    pha
+    +printAtPosAddr .BIG_TWO_LINE, .BIG_TWO_COL, .BIG_TWO_BASE, .DATA_PTR, 8
+    pla
+    tay
+
+    inc .BIG_TWO_LINE
+    +add16Bit .BIG_TWO_LINE_LEN, .BIG_TWO_BASE
+        
+    iny
+    cpy #8
+    bne .nextLineStartScreen
+
+    ; ------- print big 1--------------
+
+    lda #1
+    sta .BIG_TWO_LINE
+    lda #17
+    sta .BIG_TWO_COL    
+    +load16BitImmediate .BIG_ONE, .BIG_TWO_BASE
+
+    ldy #0
+.nextLineStartScreen2
+    tya
+    pha
+    +printAtPosAddr .BIG_TWO_LINE, .BIG_TWO_COL, .BIG_TWO_BASE, .DATA_PTR, 8
+    pla
+    tay
+
+    inc .BIG_TWO_LINE
+    +add16Bit .BIG_TWO_LINE_LEN, .BIG_TWO_BASE
+        
+    iny
+    cpy #8
+    bne .nextLineStartScreen2
+
+    ; --------print big 1 ----------------
+
+    lda #1
+    sta .BIG_TWO_LINE
+    lda #23
+    sta .BIG_TWO_COL    
+    +load16BitImmediate .BIG_ONE, .BIG_TWO_BASE
+
+    ldy #0
+.nextLineStartScreen3
+    tya
+    pha
+    +printAtPosAddr .BIG_TWO_LINE, .BIG_TWO_COL, .BIG_TWO_BASE, .DATA_PTR, 8
+    pla
+    tay
+
+    inc .BIG_TWO_LINE
+    +add16Bit .BIG_TWO_LINE_LEN, .BIG_TWO_BASE
+        
+    iny
+    cpy #8
+    bne .nextLineStartScreen3
+
+    ; ---------------------------------
+
     ; set output color 
     lda #COLOR_RED
     sta .CURRENT_COLOR
+
+    +printAtPosImmediate 20, 2, .AUTHOR, .DATA_PTR, 35
 
     ; set output position 
     +printAtPosImmediate 24, 0, .INPUT_QUESTION, .DATA_PTR, 35
