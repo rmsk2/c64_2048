@@ -446,7 +446,7 @@ youWin
 
 !ct scr
 .INPUT_QUESTION
-!tx "use joystick or keyboard (j/k)?"
+!tx "    use joystick or keyboard (j/k)?"
 !ct pet
 ; --------------------------------------------------
 ; askInputSelection 
@@ -460,6 +460,6 @@ askInputSelection
     sta .CURRENT_COLOR
 
     ; set output position 
-    +printAtPosImmediate 12, 0, .INPUT_QUESTION, .DATA_PTR, 31
+    +printAtPosImmediate 24, 0, .INPUT_QUESTION, .DATA_PTR, 35
 
     rts
