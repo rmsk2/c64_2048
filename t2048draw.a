@@ -519,7 +519,7 @@ askInputSelection
     cpy #8
     bne .nextLineStartScreen
 
-    ; ------- print big 1--------------
+    ; ------- print first big 1--------------
 
     lda #1
     sta .BIG_TWO_LINE
@@ -542,7 +542,7 @@ askInputSelection
     cpy #8
     bne .nextLineStartScreen2
 
-    ; --------print big 1 ----------------
+    ; --------print second big 1 ----------------
 
     lda #1
     sta .BIG_TWO_LINE
