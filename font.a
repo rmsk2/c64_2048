@@ -1,1 +1,65 @@
-!zone foundFreeElement
+!zone font
+
+VIC_BASE =     $D000
+.FONT_TARGET = $3000
+.FONT_SOURCE = $D000
+
+
+; --------------------------------------------------
+; copyAndSwitchToModifiedFont copies the standard font to RAM at address $3000
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+copyAndSwitchToModifiedFont
+    sei                          ; prevent interrupts
+    lda $01                      
+    pha                          ; save contents of memory location $01
+    and #%11111011
+    sta $01                      ; makes Character ROM visible
+
+    ; copy font data into RAM
+    +load16BitImmediate .FONT_SOURCE, $02
+    +load16BitImmediate .FONT_TARGET, $04
+    ldx #0
+    ldy #0
+.nextBlock
+    ; copy 256 bytes
+    lda ($02), y
+    sta ($04), y
+    iny
+    bne .nextBlock
+    ; increment hi bytes
+    inc $03
+    inc $05
+    inx
+    cpx #16                      ; copy 16 * 256 = 4096 = 4KB
+    bne .nextBlock
+
+    ; switch to font on RAM at $3000
+    pla                          ; restore contents of $01 and 
+    sta $01                      ; make IO area visible again
+    lda VIC_BASE + 24
+    and #%11110001
+    ora #%00001100
+    sta VIC_BASE + 24            ; set Character data address to %110 = 6 * 2048 = $3000 in current 16KB bank of VIC
+
+    cli                          ; allow interrupts again
+    rts
+
+
+; --------------------------------------------------
+; restoreROMFont tells the VIC to use the standard ROM font again
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+restoreROMFont
+    ; switch to original font
+    sei
+    lda VIC_BASE + 24
+    and #%11110001
+    ora #%00000100
+    sta VIC_BASE + 24            ; set Character data address to %010 = 2 * 2048 = $1000 in current 16KB bank of VIC
+    cli                          ; allow interrupts again
+    rts

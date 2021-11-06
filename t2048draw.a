@@ -43,6 +43,7 @@ initDrawing
     lda #COLOR_BLACK
     sta .FRAME_COLOR_ADR
     sta .BACKGROUND_COLOR_ADR
+    jsr copyAndSwitchToModifiedFont
     rts
 
 
@@ -58,6 +59,7 @@ deInitDrawing
     sta .FRAME_COLOR_ADR
     lda #COLOR_BLUE
     sta .BACKGROUND_COLOR_ADR
+    jsr restoreROMFont
     
     rts
 
