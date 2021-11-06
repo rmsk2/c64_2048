@@ -42,7 +42,7 @@ copyAndSwitchToModifiedFont
     lda VIC_BASE + 24
     and #%11110001
     ora #%00001100
-    sta VIC_BASE + 24            ; set Character data address to %110 = 6 * 2048 = $3000 in current 16KB bank of VIC
+    sta VIC_BASE + 24            ; set Character data address to %110 = 6 * 2048 = $3000 in current 16KB bank of the VIC
 
     cli                          ; allow interrupts again
     rts
@@ -60,6 +60,6 @@ restoreROMFont
     lda VIC_BASE + 24
     and #%11110001
     ora #%00000100
-    sta VIC_BASE + 24            ; set Character data address to %010 = 2 * 2048 = $1000 in current 16KB bank of VIC
+    sta VIC_BASE + 24            ; set Character data address to %010 = 2 * 2048 = $1000 in current 16KB bank of the VIC
     cli                          ; allow interrupts again
     rts
