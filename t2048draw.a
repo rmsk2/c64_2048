@@ -132,6 +132,17 @@ deInitDrawing
     jsr printStr    
 }
 
+!macro printAtPosImmediate .line, .col, .strAddr, .ptr, .len { 
+    ldy #.line
+    ldx #.col
+    jsr locateCursor
+
+    +load16BitImmediate .strAddr, .ptr
+    lda #.len
+    jsr printStr    
+}
+
+
 .POS_LINE !byte $00
 .POS_COL  !byte $00
 .CELL_TEXT !byte $00,$00,$00,$00,$00,$00
@@ -212,6 +223,8 @@ renderPlayingField
 !ct scr
 .DEC_CHARS
 !tx "0123456789"
+.SCORE_TXT
+!tx "score:"
 !ct pet
 ; --------------------------------------------------
 ; renderPoints represents the current result points on the screen
@@ -223,6 +236,8 @@ renderPoints
     ; set output color: 
     lda #COLOR_WHITE
     sta .CURRENT_COLOR
+
+    +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL + 14, .SCORE_TXT, .DATA_PTR, 6
 
     ; set output position 
     ldy #.ORIGIN_LINE - 3      ; line
@@ -387,23 +402,23 @@ printStr
     rts
 
 
-!macro printAtPosImmediate .line, .col, .strAddr, .ptr, .len { 
-    ldy #.line
-    ldx #.col
-    jsr locateCursor
-
-    +load16BitImmediate .strAddr, .ptr
-    lda #.len
-    jsr printStr    
-}
-
 !ct scr
 .GAME_OVER_CHARS
 !tx "game over"
 .PLAY_IT_AGAIN
-!tx " play again [y/n]? "
+!byte 101
+!tx "play again [y/n]?"
+!byte 103
 .BLANKS
-!tx "                   "
+!byte 79
+!byte 119,119,119,119,119,119,119,119,119,119,119,119,119,119,119,119,119
+!byte 80
+.BLANKS2
+!byte 76
+!byte 111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111
+!byte 122
+
+
 !ct pet
 ; --------------------------------------------------
 ; gameOver prints GAME OVER on the screen
@@ -413,23 +428,19 @@ printStr
 ; --------------------------------------------------
 gameOver
     ; set output color 
-    lda #COLOR_RED
+    lda #COLOR_WHITE
     sta .CURRENT_COLOR
  
     +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .GAME_OVER_CHARS, .DATA_PTR, 9
 
 printQuestionFrame
     ; set output color 
-    lda #COLOR_BLACK
+    lda #COLOR_WHITE
     sta .CURRENT_COLOR
 
     +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, 19
-    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, 19
-
-    lda #COLOR_RED
-    sta .CURRENT_COLOR    
-
-    +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .PLAY_IT_AGAIN, .DATA_PTR, 19  
+    +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .PLAY_IT_AGAIN, .DATA_PTR, 19
+    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .BLANKS2, .DATA_PTR, 19
 
     rts
 
