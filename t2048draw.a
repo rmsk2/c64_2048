@@ -403,8 +403,7 @@ gameOver
     ; set output color 
     lda #COLOR_RED
     sta .CURRENT_COLOR
-
-    ; set output position 
+ 
     +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .GAME_OVER_CHARS, .DATA_PTR, 9
 
 printQuestionFrame

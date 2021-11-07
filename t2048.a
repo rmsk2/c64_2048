@@ -12,11 +12,18 @@ JOYSTICK2 = $DC00
 KEYBOARD_SELECTED = 0
 JOYSTICK_SELECTED = 1
 
+
+; --------------------------------------------------
+; main implements the main loop of the game
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
 main
     jsr initDrawing
 
     lda #KEYBOARD_SELECTED
-    sta USE_JOYSTICK
+    sta INPUT_METHOD
 
     jsr askInputSelection
 .askInputDevice
@@ -29,7 +36,7 @@ main
 
 .selectJoystick
     lda #JOYSTICK_SELECTED
-    sta USE_JOYSTICK
+    sta INPUT_METHOD
 
 .newGame
     jsr initRandom
@@ -81,7 +88,7 @@ main
 
     ; wait for and evaluate player input via keyboard or joystick
 .waitForInput
-    lda USE_JOYSTICK
+    lda INPUT_METHOD
     bne .useJoystick 
     jsr waitForKey
     jmp .evalKeyPress
@@ -118,7 +125,7 @@ main
     rts
 
 
-USE_JOYSTICK
+INPUT_METHOD
 !byte $00
 
 POWERS 
@@ -351,7 +358,7 @@ ELEVEN_FOUND = 1
 NO_ELEVEN_FOUND = 0
 ;--------------------------------------------------
 ; lookForEleven searches for a value 11 = 2048 on the playing field. 
-; If one is found, the player ahs reached the target
+; If one is found, the player has reached the target
 ; 
 ; INPUT:  None
 ; OUTPUT: returns ELVEN_FOUND or NO_ELEVEN_FOUND in accu
@@ -413,6 +420,7 @@ calcPlayFieldOffset
     rts
 .SCRATCH !byte $00
 
+
 ;--------------------------------------------------
 ; addPoints adds a new value to the current result  
 ; 
@@ -429,7 +437,7 @@ addPoints
     asl                    ; *2
     tax 
     inx                    ; x now contains 2*accu + 1
-    sed
+    sed                    ; use BCD mode. This saves us from doing a hex => dec conversion when rendering the score
     clc
     ; add least significant digits of point value to result counter
     lda POINTS+2
