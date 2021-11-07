@@ -79,7 +79,7 @@ restoreROMFont
 
 
 ; --------------------------------------------------
-; rmodifyFont changes all necessar characters in RAM
+; modifyFont changes all necessary characters in RAM
 ; 
 ; INPUT:  None
 ; OUTPUT: None
