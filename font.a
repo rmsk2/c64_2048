@@ -36,7 +36,7 @@ copyAndSwitchToModifiedFont
     cpx #16                      ; copy 16 * 256 = 4096 = 4KB
     bne .nextBlock
 
-    ; switch to font on RAM at $3000
+    ; switch to font in RAM at $3000
     pla                          ; restore contents of $01 and 
     sta $01                      ; make IO area visible again
     lda VIC_BASE + 24
