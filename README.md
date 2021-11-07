@@ -1,7 +1,8 @@
 # A puzzle game for the C64
-A game for the Commodore 64 that is similar to 2048. Currently the game is playable but some 
-functionality is missing or lacking. It has to be assembled with the `ACME` macro assembler. 
-It also uses the `c1541` tool delivered with the `VICE` emulator to create the disk image. 
+A game for the Commodore 64 that is similar to 2048. All gameplay features are implemented. 
+Development will now focus on making the game look nicer (to the best of my abilities ;-)). 
+It has to be assembled with the `ACME` macro assembler. It also uses the `c1541` tool delivered 
+with the `VICE` emulator to create the disk image. 
 
 The makefile creates a D64 disk image (`t2048.d64`) that can be loaded by C64 emulators. Use 
 `LOAD "T2048",8` and then `RUN` to run the game.
