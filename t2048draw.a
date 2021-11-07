@@ -49,6 +49,17 @@ initDrawing
 
 
 ; --------------------------------------------------
+; setOutputColor sets the output color. Intended for code in other zones
+; that does not "see" the "local" label .CURRENT_COLOR
+; 
+; INPUT:  Color in accu
+; OUTPUT: None
+; --------------------------------------------------
+setOutputColor
+    sta .CURRENT_COLOR
+    rts
+
+; --------------------------------------------------
 ; deInitDrawing deinitializes the drawing routines
 ; 
 ; INPUT:  None
@@ -470,7 +481,7 @@ BIG_TWO
 !byte $20, $20, $20, $20, $20, $A0, $A0, $20 ; _____**_
 !byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20 ; _******_
 !byte $20, $A0, $A0, $20, $20, $20, $20, $20 ; _**_____
-!byte $20, $A0, $A0, $A0, $20, $20, $20, $20 ; _***____
+!byte $20, $A0, $A0, $20, $20, $20, $20, $20 ; _***____
 !byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20 ; _******_
 
 BIG_ONE
@@ -480,7 +491,7 @@ BIG_ONE
 !byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___**___
 !byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___**___
 !byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___**___
-!byte $20, $20, $20, $A0, $A0, $A0, $20, $20 ; ___***__
+!byte $20, $20, $20, $A0, $A0, $20, $20, $20 ; ___***__
 !byte $20, $20, $A0, $A0, $A0, $A0, $20, $20 ; __****__
 
 

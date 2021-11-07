@@ -703,7 +703,7 @@ add2AtRandomPos
 !source "font.a"
 
 
-;TEST=0
+TEST=0
 !ifdef TEST {
 !source "tests.a"    
 }

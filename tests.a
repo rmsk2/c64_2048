@@ -1,10 +1,24 @@
 !zone tests
 
+!ct scr
+.ERR_TEST1
+!tx "test 1 not ok"
+.ERR_TEST2
+!tx "test 2 not ok"
+.TESTS_DONE
+!tx "test done"
+!ct pet
+
+
 .VAL1 !byte $00, $00
 .VAL2 !byte $00, $00
 .VAL3 !byte $00, $00
 .VAL4 !byte $00, $00
 test16BitArithmetic
+    lda #COLOR_ORANGE
+    jsr setOutputColor
+
+    jsr clearScreen
     +load16BitImmediate $12F0, .VAL1
     +load16BitImmediate $0080, .VAL2
     +move16Bit .VAL2, .VAL4
@@ -12,19 +26,28 @@ test16BitArithmetic
     +add16Bit .VAL2, .VAL1
     +cmp16Bit .VAL1, .VAL3
     beq .cmpOK
-    lda #$41
-    jsr CHAROUT
+    +printAtPosImmediate 0, 0, .ERR_TEST1, $A7, 13
 .cmpOK
     +load16BitImmediate $0100, .VAL3
     +double16Bit .VAL4
     +cmp16Bit .VAL4, .VAL3
     beq .cmpOK2
-    lda #$42
-    jsr CHAROUT
+    +printAtPosImmediate 1, 0, .ERR_TEST2, $A7, 13
 .cmpOK2
+    +printAtPosImmediate 2, 0, .TESTS_DONE, $A7, 9
     rts
 
 testScrOut
     jsr initDrawing
     jsr renderPoints
+    rts
+
+!ct scr
+.ALL_CHARS
+!tx "abcdefghijklmnopqrstuvwxyz()0123456789?"
+!ct pet
+
+testAllChangedChars
+    jsr initDrawing
+    +printAtPosImmediate 0, 0, .ALL_CHARS, $A7, 26+10+3
     rts

@@ -172,18 +172,18 @@ setCharData
 !byte %01100110
 !byte %01100110
 !byte %01100110
-!byte %01110110
-!byte %01110110
+!byte %01100110
+!byte %01100110
 !byte %01111110
 !byte %00000000
 
 .dataChar1
+!byte %00111000
+!byte %00111000
 !byte %00011000
 !byte %00011000
 !byte %00011000
 !byte %00011000
-!byte %00011100
-!byte %00011100
 !byte %00111100
 !byte %00000000
 
@@ -192,8 +192,8 @@ setCharData
 !byte %00000110
 !byte %00000110
 !byte %01111110
-!byte %01110000
-!byte %01110000
+!byte %01100000
+!byte %01100000
 !byte %01111110
 !byte %00000000
 
@@ -202,8 +202,8 @@ setCharData
 !byte %00000110
 !byte %00000110
 !byte %01111110
-!byte %00001110
-!byte %00001110
+!byte %00000110
+!byte %00000110
 !byte %01111110
 !byte %00000000
 
@@ -212,7 +212,7 @@ setCharData
 !byte %01100110
 !byte %01100110
 !byte %01111110
-!byte %00001110
+!byte %00000110
 !byte %00001110
 !byte %00001110
 !byte %00000000
@@ -222,18 +222,18 @@ setCharData
 !byte %01100000
 !byte %01100000
 !byte %01111110
-!byte %00001110
-!byte %00001110
+!byte %00000110
+!byte %00000110
 !byte %01111110
 !byte %00000000
 
 .dataChar6
-!byte %01100000
-!byte %01100000
+!byte %01110000
+!byte %01110000
 !byte %01100000
 !byte %01111110
-!byte %01110110
-!byte %01110110
+!byte %01100110
+!byte %01100110
 !byte %01111110
 !byte %00000000
 
@@ -242,7 +242,7 @@ setCharData
 !byte %00000110
 !byte %00000110
 !byte %00000110
-!byte %00001110
+!byte %00000110
 !byte %00001110
 !byte %00001110
 !byte %00000000
@@ -252,8 +252,8 @@ setCharData
 !byte %01100110
 !byte %01100110
 !byte %01111110
-!byte %01101110
-!byte %01101110
+!byte %01100110
+!byte %01100110
 !byte %01111110
 !byte %00000000
 
@@ -262,7 +262,7 @@ setCharData
 !byte %01100110
 !byte %01100110
 !byte %01111110
-!byte %00001110
+!byte %00000110
 !byte %00001110
 !byte %00001110
 !byte %00000000
