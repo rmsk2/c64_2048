@@ -44,6 +44,7 @@ initDrawing
     sta .FRAME_COLOR_ADR
     sta .BACKGROUND_COLOR_ADR
     jsr copyAndSwitchToModifiedFont
+    jsr modifyFont
     rts
 
 

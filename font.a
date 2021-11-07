@@ -2,8 +2,11 @@
 
 VIC_BASE =     $D000
 .FONT_TARGET = $3000
+.FONT0_BASE  = .FONT_TARGET
+.FONT1_BASE  = .FONT0_BASE + 2048
 .FONT_SOURCE = $D000
-
+.FONT_PTR1   = $02
+.FONT_PTR2   = $04
 
 ; --------------------------------------------------
 ; copyAndSwitchToModifiedFont copies the standard font to RAM at address $3000
@@ -19,19 +22,19 @@ copyAndSwitchToModifiedFont
     sta $01                      ; makes Character ROM visible
 
     ; copy font data into RAM
-    +load16BitImmediate .FONT_SOURCE, $02
-    +load16BitImmediate .FONT_TARGET, $04
+    +load16BitImmediate .FONT_SOURCE, .FONT_PTR1
+    +load16BitImmediate .FONT_TARGET, .FONT_PTR2
     ldx #0
     ldy #0
 .nextBlock
     ; copy 256 bytes
-    lda ($02), y
-    sta ($04), y
+    lda (.FONT_PTR1), y
+    sta (.FONT_PTR2), y
     iny
     bne .nextBlock
     ; increment hi bytes
-    inc $03
-    inc $05
+    inc .FONT_PTR1 + 1
+    inc .FONT_PTR2 + 1
     inx
     cpx #16                      ; copy 16 * 256 = 4096 = 4KB
     bne .nextBlock
@@ -63,3 +66,111 @@ restoreROMFont
     sta VIC_BASE + 24            ; set Character data address to %010 = 2 * 2048 = $1000 in current 16KB bank of the VIC
     cli                          ; allow interrupts again
     rts
+
+
+!macro changeChar .fontFlag, .scrCode, .charAddr, .dataPTR {
+    ldy #.fontFlag
+    ldx #.scrCode
+    +load16BitImmediate .charAddr, .dataPTR    
+    jsr setCharData
+}
+
+
+; --------------------------------------------------
+; rmodifyFont changes all necessar characters in RAM
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+modifyFont
+    +changeChar 0, 48, .dataChar0, .FONT_PTR1
+    +changeChar 0, 49, .dataChar1, .FONT_PTR1
+    +changeChar 0, 50, .dataChar2, .FONT_PTR1
+    rts    
+
+.CHAR_ADDR
+!byte $00, $00
+.TEMP_X
+!byte $00
+.TEMP_Y
+!byte $00
+; --------------------------------------------------
+; setCharData changes a character in RAM
+; 
+; INPUT: screen code of character to change in x, font 0 or 1 in y
+;        .FONT_PTR1 set to address of new character data
+; OUTPUT: None
+; --------------------------------------------------
+setCharData
+    stx .TEMP_X
+    sty .TEMP_Y
+    cpy #1
+    beq .setFont1
+    +load16BitImmediate .FONT0_BASE, .FONT_PTR2
+    jmp .startChangeData
+.setFont1
+    +load16BitImmediate .FONT1_BASE, .FONT_PTR2
+
+.startChangeData
+    stx .CHAR_ADDR
+    ldx #0
+    stx .CHAR_ADDR + 1
+    ; multiply by 8
+    +double16Bit .CHAR_ADDR
+    +double16Bit .CHAR_ADDR
+    +double16Bit .CHAR_ADDR
+
+    +add16Bit .CHAR_ADDR, .FONT_PTR2
+    ldy #0
+.copyChar
+    lda (.FONT_PTR1),Y
+    sta (.FONT_PTR2),Y
+    iny
+    cpy #08
+    bne .copyChar
+
+    ; do not use up stack space
+    ldx .TEMP_X
+    ldy .TEMP_Y
+
+    rts
+
+.dataCharEmpty
+!byte %00000000
+!byte %00000000
+!byte %00000000
+!byte %00000000
+!byte %00000000
+!byte %00000000
+!byte %00000000
+!byte %00000000
+
+.dataChar0
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01110110
+!byte %01110110
+!byte %01111110
+!byte %00000000
+
+.dataChar1
+!byte %00011000
+!byte %00011000
+!byte %00011000
+!byte %00011000
+!byte %00011100
+!byte %00011100
+!byte %00111100
+!byte %00000000
+
+.dataChar2
+!byte %01111110
+!byte %00000110
+!byte %00000110
+!byte %01111110
+!byte %01110000
+!byte %01110000
+!byte %01111110
+!byte %00000000
