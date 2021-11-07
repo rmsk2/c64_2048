@@ -44,10 +44,12 @@ testScrOut
 
 !ct scr
 .ALL_CHARS
-!tx "abcdefghijklmnopqrstuvwxyz()0123456789?"
+!tx "abcdefghijklmnopqrstuvwxyz[]0123456789?"
 !ct pet
 
 testAllChangedChars
     jsr initDrawing
+    lda #COLOR_WHITE
+    jsr setOutputColor
     +printAtPosImmediate 0, 0, .ALL_CHARS, $A7, 26+10+3
     rts

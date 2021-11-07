@@ -401,7 +401,7 @@ printStr
 .GAME_OVER_CHARS
 !tx "game over"
 .PLAY_IT_AGAIN
-!tx " play again (y/n)? "
+!tx " play again [y/n]? "
 .BLANKS
 !tx "                   "
 !ct pet
@@ -469,9 +469,9 @@ youWin
 
 !ct scr
 .INPUT_QUESTION
-!tx "    use joystick or keyboard (j/k)?"
+!tx "    use joystick or keyboard [j/k]?"
 .AUTHOR
-!tx "zwei hoch 11. by martin grap (2021)"
+!tx "zwei hoch 11. by martin grap [2021]"
 !ct pet
 
 BIG_TWO

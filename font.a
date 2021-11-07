@@ -94,7 +94,31 @@ modifyFont
     +changeChar 0, 54, .dataChar6, .FONT_PTR1
     +changeChar 0, 55, .dataChar7, .FONT_PTR1
     +changeChar 0, 56, .dataChar8, .FONT_PTR1
-    +changeChar 0, 57, .dataChar9, .FONT_PTR1            
+    +changeChar 0, 57, .dataChar9, .FONT_PTR1
+    +changeChar 0, 1, .dataCharA, .FONT_PTR1
+    +changeChar 0, 2, .dataCharB, .FONT_PTR1
+    +changeChar 0, 3, .dataCharC, .FONT_PTR1
+    +changeChar 0, 4, .dataCharD, .FONT_PTR1
+    +changeChar 0, 7, .dataCharG, .FONT_PTR1
+    +changeChar 0, 9, .dataChar1, .FONT_PTR1
+    +changeChar 0, 10, .dataCharJ, .FONT_PTR1
+    +changeChar 0, 11, .dataCharK, .FONT_PTR1
+    +changeChar 0, 12, .dataCharL, .FONT_PTR1
+    +changeChar 0, 13, .dataCharM, .FONT_PTR1
+    +changeChar 0, 14, .dataCharN, .FONT_PTR1
+    +changeChar 0, 15, .dataCharO, .FONT_PTR1
+    +changeChar 0, 16, .dataCharP, .FONT_PTR1
+    +changeChar 0, 17, .dataCharQ, .FONT_PTR1    
+    +changeChar 0, 18, .dataCharR, .FONT_PTR1
+    +changeChar 0, 19, .dataChar5, .FONT_PTR1
+    +changeChar 0, 20, .dataCharT, .FONT_PTR1
+    +changeChar 0, 21, .dataCharU, .FONT_PTR1
+    +changeChar 0, 22, .dataCharV, .FONT_PTR1
+    +changeChar 0, 23, .dataCharW, .FONT_PTR1
+    +changeChar 0, 24, .dataCharX, .FONT_PTR1
+    +changeChar 0, 25, .dataCharY, .FONT_PTR1
+    +changeChar 0, 26, .dataCharZ, .FONT_PTR1
+    +changeChar 0, 63, .dataCharQM, .FONT_PTR1            
     rts    
 
 .CHAR_ADDR
@@ -168,13 +192,13 @@ setCharData
 !byte %00000000
 
 .dataChar0
-!byte %01111110
+!byte %01110110
+!byte %01110110
 !byte %01100110
 !byte %01100110
 !byte %01100110
-!byte %01100110
-!byte %01100110
-!byte %01111110
+!byte %01101110
+!byte %01101110
 !byte %00000000
 
 .dataChar1
@@ -265,4 +289,225 @@ setCharData
 !byte %00000110
 !byte %00001110
 !byte %00001110
+!byte %00000000
+
+.dataCharA
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %00000000
+
+.dataCharB
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %00000000
+
+.dataCharD
+!byte %01111110
+!byte %01111110
+!byte %01110110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %00000000
+
+
+.dataCharC
+!byte %01111110
+!byte %01110000
+!byte %01110000
+!byte %01100000
+!byte %01100000
+!byte %01100000
+!byte %01111110
+!byte %00000000
+
+.dataCharG
+!byte %01111110
+!byte %01100000
+!byte %01100000
+!byte %01101110
+!byte %01101110
+!byte %01100110
+!byte %01111110
+!byte %00000000
+
+.dataCharJ
+!byte %00011100
+!byte %00011100
+!byte %00001100
+!byte %00001100
+!byte %00001100
+!byte %00001100
+!byte %01111100
+!byte %00000000
+
+.dataCharK
+!byte %01100110
+!byte %01100110
+!byte %01101100
+!byte %01111000
+!byte %01101100
+!byte %01100110
+!byte %01100110
+!byte %00000000
+
+.dataCharL
+!byte %01110000
+!byte %01110000
+!byte %01100000
+!byte %01100000
+!byte %01100000
+!byte %01100000
+!byte %01111110
+!byte %00000000
+
+.dataCharM
+!byte %11000110
+!byte %11111110
+!byte %11010110
+!byte %11010110
+!byte %11000110
+!byte %11001110
+!byte %11001110
+!byte %00000000
+
+.dataCharN
+!byte %01100110
+!byte %01100110
+!byte %01110110
+!byte %01111110
+!byte %01101110
+!byte %01100110
+!byte %01100110
+!byte %00000000
+
+.dataCharO
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %00000000
+
+.dataCharP
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %01100000
+!byte %01110000
+!byte %01110000
+!byte %00000000
+
+.dataCharQ
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01101110
+!byte %01111110
+!byte %01111110
+!byte %00000000
+
+.dataCharR
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %01100110
+!byte %01110110
+!byte %01110110
+!byte %00000000
+
+.dataCharT
+!byte %01111110
+!byte %00011000
+!byte %00011000
+!byte %00011000
+!byte %00011100
+!byte %00011100
+!byte %00011100
+!byte %00000000
+
+.dataCharU
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %00000000
+
+.dataCharV
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %00111100
+!byte %00111100
+!byte %00000000
+
+.dataCharW
+!byte %11001110
+!byte %11001110
+!byte %11000110
+!byte %11010110
+!byte %11010110
+!byte %11111110
+!byte %11000110
+!byte %00000000
+
+.dataCharX
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %00111100
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %00000000
+
+.dataCharY
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %00011000
+!byte %00011000
+!byte %00011000
+!byte %00000000
+
+.dataCharZ
+!byte %01111110
+!byte %00000110
+!byte %00000110
+!byte %00111100
+!byte %01100000
+!byte %01100000
+!byte %01111110
+!byte %00000000
+
+.dataCharQM
+!byte %01111110
+!byte %00000110
+!byte %00000110
+!byte %00011110
+!byte %00011000
+!byte %00000000
+!byte %00011000
 !byte %00000000
