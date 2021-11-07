@@ -3,7 +3,9 @@
 VIC_BASE =     $D000
 .FONT_TARGET = $3000
 .FONT0_BASE  = .FONT_TARGET
+.FONT0_BASE_REVERSE = .FONT0_BASE + 1024
 .FONT1_BASE  = .FONT0_BASE + 2048
+.FONT1_BASE_REVERSE = .FONT1_BASE + 1024
 .FONT_SOURCE = $D000
 .FONT_PTR1   = $02
 .FONT_PTR2   = $04
@@ -86,6 +88,13 @@ modifyFont
     +changeChar 0, 48, .dataChar0, .FONT_PTR1
     +changeChar 0, 49, .dataChar1, .FONT_PTR1
     +changeChar 0, 50, .dataChar2, .FONT_PTR1
+    +changeChar 0, 51, .dataChar3, .FONT_PTR1
+    +changeChar 0, 52, .dataChar4, .FONT_PTR1
+    +changeChar 0, 53, .dataChar5, .FONT_PTR1
+    +changeChar 0, 54, .dataChar6, .FONT_PTR1
+    +changeChar 0, 55, .dataChar7, .FONT_PTR1
+    +changeChar 0, 56, .dataChar8, .FONT_PTR1
+    +changeChar 0, 57, .dataChar9, .FONT_PTR1            
     rts    
 
 .CHAR_ADDR
@@ -94,8 +103,12 @@ modifyFont
 !byte $00
 .TEMP_Y
 !byte $00
+.FONT_PTR_REVERSE
+!byte $00, $00
+.FONT_PTR
+!byte $00, $00
 ; --------------------------------------------------
-; setCharData changes a character in RAM
+; setCharData changes a character in RAM and sets also its reverse
 ; 
 ; INPUT: screen code of character to change in x, font 0 or 1 in y
 ;        .FONT_PTR1 set to address of new character data
@@ -106,10 +119,12 @@ setCharData
     sty .TEMP_Y
     cpy #1
     beq .setFont1
-    +load16BitImmediate .FONT0_BASE, .FONT_PTR2
+    +load16BitImmediate .FONT0_BASE, .FONT_PTR
+    +load16BitImmediate .FONT0_BASE_REVERSE, .FONT_PTR_REVERSE
     jmp .startChangeData
 .setFont1
-    +load16BitImmediate .FONT1_BASE, .FONT_PTR2
+    +load16BitImmediate .FONT1_BASE, .FONT_PTR
+    +load16BitImmediate .FONT1_BASE_REVERSE, .FONT_PTR_REVERSE
 
 .startChangeData
     stx .CHAR_ADDR
@@ -120,11 +135,18 @@ setCharData
     +double16Bit .CHAR_ADDR
     +double16Bit .CHAR_ADDR
 
-    +add16Bit .CHAR_ADDR, .FONT_PTR2
+    +add16Bit .CHAR_ADDR, .FONT_PTR
+    +add16Bit .CHAR_ADDR, .FONT_PTR_REVERSE
     ldy #0
 .copyChar
+    +move16Bit .FONT_PTR, .FONT_PTR2
     lda (.FONT_PTR1),Y
     sta (.FONT_PTR2),Y
+    eor #$FF
+    tax 
+    +move16Bit .FONT_PTR_REVERSE, .FONT_PTR2
+    txa
+    sta (.FONT_PTR2), y
     iny
     cpy #08
     bne .copyChar
@@ -173,4 +195,74 @@ setCharData
 !byte %01110000
 !byte %01110000
 !byte %01111110
+!byte %00000000
+
+.dataChar3
+!byte %01111110
+!byte %00000110
+!byte %00000110
+!byte %01111110
+!byte %00001110
+!byte %00001110
+!byte %01111110
+!byte %00000000
+
+.dataChar4
+!byte %01100110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %00001110
+!byte %00001110
+!byte %00001110
+!byte %00000000
+
+.dataChar5
+!byte %01111110
+!byte %01100000
+!byte %01100000
+!byte %01111110
+!byte %00001110
+!byte %00001110
+!byte %01111110
+!byte %00000000
+
+.dataChar6
+!byte %01100000
+!byte %01100000
+!byte %01100000
+!byte %01111110
+!byte %01110110
+!byte %01110110
+!byte %01111110
+!byte %00000000
+
+.dataChar7
+!byte %01111110
+!byte %00000110
+!byte %00000110
+!byte %00000110
+!byte %00001110
+!byte %00001110
+!byte %00001110
+!byte %00000000
+
+.dataChar8
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %01101110
+!byte %01101110
+!byte %01111110
+!byte %00000000
+
+.dataChar9
+!byte %01111110
+!byte %01100110
+!byte %01100110
+!byte %01111110
+!byte %00001110
+!byte %00001110
+!byte %00001110
 !byte %00000000
