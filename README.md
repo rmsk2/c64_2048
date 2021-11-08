@@ -24,6 +24,6 @@ the playing field. The game is over if no valid moves are left. A move is valid,
 contents of the playing field either by moving at least one tile or by creating at least a new tile by 
 merging two adjacent (in the direction of the move/shift chosen by the player) tiles of the same value. 
 
-Screenshot:![](/t2048.png?raw=true "Screenshot of game")
+Title screen:![](/t2048.png?raw=true "Title screen of game")
 
-Title screen:![](/zwei_hoch_title.png?raw=true "Title screen of game")
+Screenshot:![](/zwei_hoch_title.png?raw=true "Screenshot of game")
