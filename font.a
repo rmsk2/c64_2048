@@ -139,6 +139,7 @@ modifyFont
 ; OUTPUT: None
 ; --------------------------------------------------
 setCharData
+    ; save registers
     stx .TEMP_X
     sty .TEMP_Y
     cpy #1
@@ -159,20 +160,21 @@ setCharData
     +double16Bit .CHAR_ADDR
     +double16Bit .CHAR_ADDR
 
-    +add16Bit .CHAR_ADDR, .FONT_PTR
-    +add16Bit .CHAR_ADDR, .FONT_PTR_REVERSE
+    +add16Bit .CHAR_ADDR, .FONT_PTR   ; .FONT_PTR contains base address of char in RAM
+    +add16Bit .CHAR_ADDR, .FONT_PTR_REVERSE ; .FONT_PTR_REVERSE contains base address of reversed char in RAM
+    ; copy 8 bytes of char
     ldy #0
 .copyChar
-    +move16Bit .FONT_PTR, .FONT_PTR2
-    lda (.FONT_PTR1),Y
-    sta (.FONT_PTR2),Y
-    eor #$FF
-    tax 
-    +move16Bit .FONT_PTR_REVERSE, .FONT_PTR2
-    txa
-    sta (.FONT_PTR2), y
+    +move16Bit .FONT_PTR, .FONT_PTR2 ; set .FONT_PTR2 to base address of char
+    lda (.FONT_PTR1),Y               ; load one byte of changed char
+    sta (.FONT_PTR2),Y               ; store in RAM
+    eor #$FF                         ; invert bit patterns
+    tax                              ; save bit pattern
+    +move16Bit .FONT_PTR_REVERSE, .FONT_PTR2 ; set .FONT_PTR2 to base address of reversed char
+    txa                              ; restore bit pattern
+    sta (.FONT_PTR2), y              ; store inverted bit pattern
     iny
-    cpy #08
+    cpy #08                          ; all bytes copied?
     bne .copyChar
 
     ; do not use up stack space
