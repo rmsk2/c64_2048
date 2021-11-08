@@ -417,6 +417,10 @@ printStr
 !byte 76
 !byte 111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111
 !byte 122
+.BLANKS3
+!byte 101
+!tx "                 "
+!byte 103
 
 
 !ct pet
@@ -438,9 +442,11 @@ printQuestionFrame
     lda #COLOR_WHITE
     sta .CURRENT_COLOR
 
-    +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, 19
+    +printAtPosImmediate .ORIGIN_LINE + 3, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, 19
+    +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .BLANKS3, .DATA_PTR, 19
     +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .PLAY_IT_AGAIN, .DATA_PTR, 19
-    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .BLANKS2, .DATA_PTR, 19
+    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .BLANKS3, .DATA_PTR, 19
+    +printAtPosImmediate .ORIGIN_LINE + 7, .ORIGIN_COL + 4, .BLANKS2, .DATA_PTR, 19
 
     rts
 
@@ -458,7 +464,7 @@ printQuestionFrame
 ; --------------------------------------------------
 youWin
     ; set output color 
-    lda #COLOR_RED
+    lda #COLOR_WHITE
     sta .CURRENT_COLOR
 
     ; set output position 

@@ -32,7 +32,7 @@ main
     beq .selectJoystick
     cmp #$4b                    ; k => keyboard
     beq .newGame
-    jmp .askInputDevice         ; neither y nor n => try again
+    jmp .askInputDevice         ; neither j nor k => try again
 
 .selectJoystick
     lda #JOYSTICK_SELECTED
