@@ -406,20 +406,22 @@ printStr
 .GAME_OVER_CHARS
 !tx "game over"
 .PLAY_IT_AGAIN
+!tx " play again [y/n]? "
+.FRAME_TEXT
 !byte 101
-!tx "play again [y/n]?"
+!byte 32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32
 !byte 103
 .BLANKS
 !byte 79
-!byte 119,119,119,119,119,119,119,119,119,119,119,119,119,119,119,119,119
+!byte 119,119,119,119,119,119,119,119,119,119,119,119,119,119,119,119,119,119,119
 !byte 80
 .BLANKS2
 !byte 76
-!byte 111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111
+!byte 111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111
 !byte 122
 .BLANKS3
 !byte 101
-!tx "                 "
+!tx "                   "
 !byte 103
 
 
@@ -436,17 +438,43 @@ gameOver
     sta .CURRENT_COLOR
  
     +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .GAME_OVER_CHARS, .DATA_PTR, 9
+    +load16BitImmediate .PLAY_IT_AGAIN, .DATA_PTR
+    jmp printQuestionFrame
 
+.PRINT_WIN_SIZE = 21
+
+.QUESTION_TEMP
+!byte $00, $00
+; --------------------------------------------------
+; printQuestionFrame draws text on the screen that is placed in a frame. The position
+; of the frame is fixed as well as the size (currently 21 characters).
+; 
+; INPUT:  .DATA_PTR is set to the message that is to be printed
+; OUTPUT: None
+; --------------------------------------------------
 printQuestionFrame
     ; set output color 
     lda #COLOR_WHITE
     sta .CURRENT_COLOR
 
-    +printAtPosImmediate .ORIGIN_LINE + 3, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, 19
-    +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .BLANKS3, .DATA_PTR, 19
-    +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .PLAY_IT_AGAIN, .DATA_PTR, 19
-    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .BLANKS3, .DATA_PTR, 19
-    +printAtPosImmediate .ORIGIN_LINE + 7, .ORIGIN_COL + 4, .BLANKS2, .DATA_PTR, 19
+    ; save pointer to text
+    +move16Bit .DATA_PTR, .QUESTION_TEMP
+
+    ; print empty frame of size 5x21
+    +printAtPosImmediate .ORIGIN_LINE + 3, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
+    +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .BLANKS3, .DATA_PTR, .PRINT_WIN_SIZE
+    +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .FRAME_TEXT, .DATA_PTR, .PRINT_WIN_SIZE
+    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .BLANKS3, .DATA_PTR, .PRINT_WIN_SIZE
+    +printAtPosImmediate .ORIGIN_LINE + 7, .ORIGIN_COL + 4, .BLANKS2, .DATA_PTR, .PRINT_WIN_SIZE
+
+    ; restore pointer to text
+    +move16Bit .QUESTION_TEMP, .DATA_PTR 
+    ; print message into frame
+    ldy #.ORIGIN_LINE + 5
+    ldx #.ORIGIN_COL + 5
+    jsr locateCursor
+    lda #.PRINT_WIN_SIZE - 2
+    jsr printStr    
 
     rts
 
@@ -454,7 +482,26 @@ printQuestionFrame
 !ct scr
 .YOU_WIN_CHARS
 !tx "you win!"
+.RU_SURE
+!tx "are you sure [y/n]?"
 !ct pet
+
+; --------------------------------------------------
+; areYouSure displays "are you sure [y/n]?" in a framae 
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+areYouSure
+    ; set output color 
+    lda #COLOR_WHITE
+    sta .CURRENT_COLOR
+
+    ; set output position 
+    +load16BitImmediate .RU_SURE, .DATA_PTR
+
+    jmp printQuestionFrame
+
 
 ; --------------------------------------------------
 ; youWin informs the player that the game was won
@@ -469,6 +516,7 @@ youWin
 
     ; set output position 
     +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .YOU_WIN_CHARS, .DATA_PTR, 8
+    +load16BitImmediate .PLAY_IT_AGAIN, .DATA_PTR
 
     jmp printQuestionFrame
 

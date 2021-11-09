@@ -11,6 +11,13 @@ GETIN   = $FFE4
 JOYSTICK2 = $DC00
 KEYBOARD_SELECTED = 0
 JOYSTICK_SELECTED = 1
+QUIT_CHAR_ASCII = 75 ; "k"
+CHAR_YES = 89        ; "y"
+CHAR_NO = 78         ; "n"
+CHAR_LEFT = 65       ; "a"
+CHAR_RIGHT = 68      ; "d"
+CHAR_UP = 87         ; "w"
+CHAR_DOWN = 83       ; "s"
 
 
 ; --------------------------------------------------
@@ -79,12 +86,20 @@ main
 
     ; play again (y/n)?
 .askPlayAgain
+    lda INPUT_METHOD
+    bne .useJoystickPlayAgain
+.playAgainKeyboard
     jsr waitForKey
-    cmp #89                     ; y => restart game
+    cmp #CHAR_YES               ; y => restart game
     beq .newGame
-    cmp #78                     ; n => quit game
+    cmp #CHAR_NO                ; n => quit game
     beq .mainDone
-    jmp .askPlayAgain           ; neither y nor n => try again
+    jmp .playAgainKeyboard      ; neither y nor n => try again
+.useJoystickPlayAgain
+    jsr waitForJoystick
+    cmp #QUIT_CHAR_ASCII
+    bne .newGame
+    beq .mainDone
 
     ; wait for and evaluate player input via keyboard or joystick
 .waitForInput
@@ -96,16 +111,16 @@ main
     jsr waitForJoystick
 
 .evalKeyPress
-    cmp #87                             ; W => up
+    cmp #CHAR_UP                        ; W => up
     beq .userInputUp
-    cmp #83                             ; S => down
+    cmp #CHAR_DOWN                      ; S => down
     beq .userInputDown
-    cmp #65                             ; A => left
+    cmp #CHAR_LEFT                      ; A => left
     beq .userInputLeft
-    cmp #68                             ; D => right
+    cmp #CHAR_RIGHT                     ; D => right
     beq .userInputRight
-    cmp #75                             ; K => Kuit ;-)
-    beq .mainDone
+    cmp #QUIT_CHAR_ASCII                ; K => Kuit ;-)
+    beq .userInputQuit
     bne .waitForInput
 .userInputUp
     jsr shiftUp
@@ -119,6 +134,31 @@ main
 .userInputRight
     jsr shiftRight
     jmp .mainLoop
+.userInputQuit
+    ; print "are you sure (y/n)?""
+    jsr areYouSure
+.askYouSure
+    lda INPUT_METHOD
+    bne .useJoystickYouSure 
+    jsr waitForKey
+.evalSureQuestion
+    cmp #CHAR_YES               ; y => Really quit game
+    beq .mainDone
+    cmp #CHAR_NO                ; n => Continue game
+    beq .continueGame
+    jmp .askYouSure             ; neither y nor n => try again
+
+.useJoystickYouSure
+    jsr waitForJoystick
+    cmp #QUIT_CHAR_ASCII
+    bne .continueGame
+    beq .mainDone
+
+.continueGame
+    ; remove frame and continue game
+    jsr clearScreen
+    jsr renderPlayingField
+    jmp .waitForInput
 
 .mainDone
     jsr deInitDrawing
@@ -177,19 +217,19 @@ waitForJoystick
     beq .quitFound
     bne .loopJoy
 .upFound
-    lda #87
+    lda #CHAR_UP
     jmp .waitNeutral
 .downFound
-    lda #83
+    lda #CHAR_DOWN
     jmp .waitNeutral
 .leftFound
-    lda #65
+    lda #CHAR_LEFT
     jmp .waitNeutral
 .rightFound
-    lda #68
+    lda #CHAR_RIGHT
     jmp .waitNeutral
 .quitFound
-    lda #75
+    lda #QUIT_CHAR_ASCII
     ; wait until joystick is in neutral position again
 .waitNeutral
     ldy JOYSTICK2
