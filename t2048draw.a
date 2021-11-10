@@ -319,27 +319,21 @@ locateCursor
 ; OUTPUT: None
 ; --------------------------------------------------
 clearScreen
-    lda #0
-    sta .CLR_LINE_COUNT
-
-.nextLineClr
-    ldy .CLR_LINE_COUNT
+    +load16BitImmediate .SCREEN_RAM_BASE, .SCREEN_RAM
+    
     ldx #0
-    jsr locateCursor
-
     lda #32
-    ldy #0
-
-.nextCharClr
+    ldy #0    
+.nextByte
     sta (.SCREEN_RAM), Y
     iny
-    cpy #40
-    bne .nextCharClr
+    bne .nextByte
+    inc .SCREEN_RAM + 1
+    inx
+    cpx #4
+    bne .nextByte
 
-    inc .CLR_LINE_COUNT
-    lda #25
-    cmp .CLR_LINE_COUNT
-    bne .nextLineClr
+    +load16BitImmediate .SCREEN_RAM_BASE, .SCREEN_RAM
 
     rts
     
@@ -423,9 +417,23 @@ printStr
 !byte 101
 !tx "                   "
 !byte 103
-
-
+.CLEAR_BLANKS
+!byte 32
+!byte 32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32
+!byte 32
 !ct pet
+
+
+clearFrame
+    +printAtPosImmediate .ORIGIN_LINE + 3, .ORIGIN_COL + 4, .CLEAR_BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
+    +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .CLEAR_BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
+    +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .CLEAR_BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
+    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .CLEAR_BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
+    +printAtPosImmediate .ORIGIN_LINE + 7, .ORIGIN_COL + 4, .CLEAR_BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
+
+    rts
+
+
 ; --------------------------------------------------
 ; gameOver prints GAME OVER on the screen
 ; 
