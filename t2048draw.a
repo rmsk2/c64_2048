@@ -310,8 +310,6 @@ locateCursor
     rts
 
 
-.CLR_LINE_COUNT
-!byte $00
 ; --------------------------------------------------
 ; clearScreen fills all characters on screen with space.
 ; 
@@ -320,7 +318,7 @@ locateCursor
 ; --------------------------------------------------
 clearScreen
     +load16BitImmediate .SCREEN_RAM_BASE, .SCREEN_RAM
-    
+
     ldx #0
     lda #32
     ldy #0    
