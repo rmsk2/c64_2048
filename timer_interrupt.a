@@ -1,0 +1,54 @@
+!zone interrupt
+
+.INTERRUPT_VECTOR = $0314
+.SYSTEM_INTERRUPT = $EA31
+.CIA_CONTROL_REG_B = $DC0F
+.CIA_CONTROL_REG_A = $DC0E
+.CIA_RTC_TENTH_SECONDS = $DC08
+.CIA_RTC_SECONDS = $DC09
+.CIA_RTC_MINUTES = $DC0A
+.CIA_RTC_HOURS = $DC0B
+
+
+initTimerInterrupt
+    sei
+
+    lda #<.interruptServiceRoutine
+    sta .INTERRUPT_VECTOR
+    lda #>.interruptServiceRoutine
+    sta .INTERRUPT_VECTOR + 1
+
+    cli
+    rts
+
+deInitTimeInterrupt
+    sei
+
+    lda #<.SYSTEM_INTERRUPT
+    sta .INTERRUPT_VECTOR
+    lda #>.SYSTEM_INTERRUPT
+    sta .INTERRUPT_VECTOR + 1
+
+    cli
+    rts
+
+
+.interruptServiceRoutine
+    lda SHOW_TIMER
+    beq .systemISR
+    lda .CIA_RTC_SECONDS
+    sta $0400
+
+.systemISR
+    jmp .SYSTEM_INTERRUPT
+
+
+resetAndStartRTC
+    ; set rtc to 0
+    lda #$00
+    sta .CIA_RTC_HOURS
+    sta .CIA_RTC_MINUTES
+    sta .CIA_RTC_SECONDS
+    sta .CIA_RTC_TENTH_SECONDS               ; this starts the RTC
+
+    rts

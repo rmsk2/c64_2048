@@ -18,7 +18,14 @@ CHAR_LEFT = 65       ; "a"
 CHAR_RIGHT = 68      ; "d"
 CHAR_UP = 87         ; "w"
 CHAR_DOWN = 83       ; "s"
+NO_TIMER = 0
+VISIBLE_TIMER = 1
 
+
+    ; init timer interrupt
+    jsr initTimerInterrupt
+    lda #NO_TIMER
+    sta SHOW_TIMER
 
 ; --------------------------------------------------
 ; main implements the main loop of the game
@@ -26,6 +33,7 @@ CHAR_DOWN = 83       ; "s"
 ; INPUT:  None
 ; OUTPUT: None
 ; --------------------------------------------------
+
 main
     jsr initDrawing
 
@@ -49,6 +57,7 @@ main
     jsr initRandom
     jsr clearScreen
     jsr clearPlayingField
+    jsr resetAndStartRTC
     
     ; clear result counter
     lda #00
@@ -58,6 +67,9 @@ main
 
     jsr savePlayingField
     jsr add2AtRandomPos
+    
+    ;lda #VISIBLE_TIMER
+    ;sta SHOW_TIMER
 
 .mainLoop
     jsr testPlayingFieldChanged   ; compare to playing field saved before last move
@@ -162,9 +174,12 @@ main
 
 .mainDone
     jsr deInitDrawing
+    jsr deInitTimeInterrupt
     rts
 
 
+SHOW_TIMER
+!byte $00
 INPUT_METHOD
 !byte $00
 
@@ -741,6 +756,7 @@ add2AtRandomPos
 !source "t2048draw.a"
 !source "random.a"
 !source "font.a"
+!source "timer_interrupt.a"
 
 
 ;TEST=0

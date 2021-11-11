@@ -221,7 +221,7 @@ renderPlayingField
     rts               
 
 !ct scr
-.DEC_CHARS
+DEC_CHARS
 !tx "0123456789"
 .SCORE_TXT
 !tx "score:"
@@ -254,12 +254,12 @@ renderPoints
     lsr
     lsr 
     tax
-    lda .DEC_CHARS, X       ; use result to determine decimal digit
+    lda DEC_CHARS, X       ; use result to determine decimal digit
     jsr printChar
     lda POINTS, y
     and #$0F                ; mask out least significant digit
     tax
-    lda .DEC_CHARS, X
+    lda DEC_CHARS, X
     jsr printChar
     iny 
     cpy #03                ; all digits printed?
