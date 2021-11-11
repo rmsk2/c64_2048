@@ -38,6 +38,8 @@ deInitTimeInterrupt
     beq .systemISR
     lda .CIA_RTC_SECONDS
     sta $0400
+    ; Remeber reading .CIA_RTC_HOURS freezes the RTC registers
+    ; you have to read .CIA_RTC_TENTH_SECONDS to unfreeze them
 
 .systemISR
     jmp .SYSTEM_INTERRUPT
