@@ -63,21 +63,21 @@ deInitTimeInterrupt
  
     +splitByte .CIA_RTC_HOURS                ; this freezes the RTC registers
     lda DEC_CHARS, X
-    sta $0401
+    sta HOUR_ADDRESS + 1
     lda DEC_CHARS, y
-    sta $0400
+    sta HOUR_ADDRESS
 
     +splitByte .CIA_RTC_MINUTES
     lda DEC_CHARS, X
-    sta $0404
+    sta MINUTE_ADDRESS + 1
     lda DEC_CHARS, y
-    sta $0403
+    sta MINUTE_ADDRESS
 
     +splitByte .CIA_RTC_SECONDS
     lda DEC_CHARS, X
-    sta $0407
+    sta SECOND_ADDRESS + 1
     lda DEC_CHARS, y
-    sta $0406
+    sta SECOND_ADDRESS
     lda .CIA_RTC_TENTH_SECONDS               ; unfreeze registers    
 
 .systemISR

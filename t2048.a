@@ -57,6 +57,7 @@ main
     jsr initRandom
     jsr clearScreen
     jsr clearPlayingField
+    jsr renderClock
     jsr resetAndStartRTC
     
     ; clear result counter
@@ -68,8 +69,8 @@ main
     jsr savePlayingField
     jsr add2AtRandomPos
     
-    ;lda #VISIBLE_TIMER
-    ;sta SHOW_TIMER
+    lda #VISIBLE_TIMER
+    sta SHOW_TIMER
 
 .mainLoop
     jsr testPlayingFieldChanged   ; compare to playing field saved before last move
@@ -174,8 +175,9 @@ main
     jmp .waitForInput
 
 .mainDone
-    jsr deInitDrawing
     jsr deInitTimeInterrupt
+    jsr deInitDrawing
+
     rts
 
 

@@ -6,6 +6,10 @@
 .BACKGROUND_COLOR_ADR = $D021
 .ORIGIN_LINE = 4
 .ORIGIN_COL = 6 
+HOUR_ADDRESS = 1024 + 21 * 40 + 19
+MINUTE_ADDRESS = 1024 + 21 * 40 + 22
+SECOND_ADDRESS = 1024 + 21 * 40 + 25
+
 
 COLOR_BLACK = 0
 COLOR_WHITE = 1
@@ -267,6 +271,26 @@ renderPoints
 
     rts
 
+
+!ct scr
+.TIME_TEXT
+!tx "time elapsed 00:00:00" 
+!ct pet
+; -------
+
+; --------------------------------------------------
+; renderClock represents the elapsed time on the screen
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+renderClock
+    lda #COLOR_GREEN
+    sta .CURRENT_COLOR
+
+    +printAtPosImmediate .ORIGIN_LINE + 17, .ORIGIN_COL, .TIME_TEXT, .DATA_PTR, 21
+
+    rts
 
 .OFFSET_ADR
 !byte $00, $00
