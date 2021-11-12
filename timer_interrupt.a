@@ -10,41 +10,86 @@
 .CIA_RTC_HOURS = $DC0B
 
 
+; --------------------------------------------------
+; initTimerInterrupt hooks the system interrupt vector an points it to a custom location
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
 initTimerInterrupt
     sei
-
-    lda #<.interruptServiceRoutine
-    sta .INTERRUPT_VECTOR
-    lda #>.interruptServiceRoutine
-    sta .INTERRUPT_VECTOR + 1
-
+    +load16BitImmediate .interruptServiceRoutine, .INTERRUPT_VECTOR
     cli
     rts
 
+
+; --------------------------------------------------
+; deInitTimeInterrupt restores the system interruot vector to its original value
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
 deInitTimeInterrupt
     sei
-
-    lda #<.SYSTEM_INTERRUPT
-    sta .INTERRUPT_VECTOR
-    lda #>.SYSTEM_INTERRUPT
-    sta .INTERRUPT_VECTOR + 1
-
+    +load16BitImmediate .SYSTEM_INTERRUPT, .INTERRUPT_VECTOR
     cli
     rts
 
 
+!macro splitByte .data {
+    ldy .data
+    tya
+    and #$0F
+    tax
+    tya
+    and #$F0
+    lsr
+    lsr 
+    lsr 
+    lsr 
+    tay
+}
+
+
+; --------------------------------------------------
+; .interruptServiceRoutine renders the current time of the RTC and then jums to the origial ISR
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
 .interruptServiceRoutine
     lda SHOW_TIMER
-    beq .systemISR
-    lda .CIA_RTC_SECONDS
+    beq .systemISR                           ; timer value is not to be rendered
+ 
+    +splitByte .CIA_RTC_HOURS                ; this freezes the RTC registers
+    lda DEC_CHARS, X
+    sta $0401
+    lda DEC_CHARS, y
     sta $0400
-    ; Remeber reading .CIA_RTC_HOURS freezes the RTC registers
-    ; you have to read .CIA_RTC_TENTH_SECONDS to unfreeze them
+
+    +splitByte .CIA_RTC_MINUTES
+    lda DEC_CHARS, X
+    sta $0404
+    lda DEC_CHARS, y
+    sta $0403
+
+    +splitByte .CIA_RTC_SECONDS
+    lda DEC_CHARS, X
+    sta $0407
+    lda DEC_CHARS, y
+    sta $0406
+    lda .CIA_RTC_TENTH_SECONDS               ; unfreeze registers    
 
 .systemISR
     jmp .SYSTEM_INTERRUPT
 
 
+; --------------------------------------------------
+; resetAndStartRTC sets the system time of day clock to 00:00:00 and (re)starts it
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
 resetAndStartRTC
     ; set rtc to 0
     lda #$00
@@ -52,5 +97,20 @@ resetAndStartRTC
     sta .CIA_RTC_MINUTES
     sta .CIA_RTC_SECONDS
     sta .CIA_RTC_TENTH_SECONDS               ; this starts the RTC
+    lda .CIA_RTC_TENTH_SECONDS               ; unfreeze RTC registers
 
+    rts
+
+
+; --------------------------------------------------
+; stopRTC freezes the RTC registers
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+stopRTC
+    sei 
+    lda .CIA_RTC_HOURS
+    sta .CIA_RTC_HOURS
+    cli
     rts

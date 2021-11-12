@@ -95,6 +95,7 @@ main
 
     ; no more moves possible => game over
     jsr gameOver
+    jsr stopRTC
 
     ; play again (y/n)?
 .askPlayAgain
