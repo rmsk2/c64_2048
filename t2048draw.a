@@ -664,6 +664,7 @@ signalIllegalMove
     sta .FRAME_TMP
     lda #COLOR_ORANGE
     sta .FRAME_COLOR_ADR
+.delayCount
     ldx #64
     ldy #0
 .count256
@@ -673,4 +674,21 @@ signalIllegalMove
     bne .count256
     lda .FRAME_TMP
     sta .FRAME_COLOR_ADR
+    rts
+
+
+
+; --------------------------------------------------
+; signalPointsWon gives feedback to the user that points were awarded
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+signalPointsWon
+    lda .FRAME_COLOR_ADR
+    sta .FRAME_TMP
+    lda #COLOR_GREEN
+    sta .FRAME_COLOR_ADR
+
+    jmp .delayCount
     rts

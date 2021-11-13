@@ -65,6 +65,11 @@ main
     sta POINTS+1
     sta POINTS+2
 
+    ; clear old result
+    sta POINTS_OLD
+    sta POINTS_OLD+1
+    sta POINTS_OLD+2
+
     jsr savePlayingField
     jsr add2AtRandomPos
     
@@ -76,16 +81,18 @@ main
     cmp #NO_CHANGE_DETECTED
     bne .addNewChar
     jsr signalIllegalMove
-    jmp .resumeAfterInvalid
+    jmp .renderOnly
 
 .addNewChar
     jsr add2AtRandomPos
-.resumeAfterInvalid
+
+.renderOnly
     jsr renderPlayingField
+    jsr testPointsChanged         ; check if new points were awarded
 
     jsr lookForEleven
     cmp #ELEVEN_FOUND
-    bne .checkGameOver           ; no eleven found. Game continues
+    bne .checkGameOver            ; no eleven found. Game continues
 
     ; We have 2048 on the board => player wins
     jsr youWin
@@ -109,13 +116,15 @@ main
     cmp #CHAR_YES               ; y => restart game
     beq .newGame
     cmp #CHAR_NO                ; n => quit game
-    beq .mainDone
+    bne .tryAgain
+    jmp .mainDone               ; CHAR_NO pressed => quit game
+.tryAgain
     jmp .playAgainKeyboard      ; neither y nor n => try again
 .useJoystickPlayAgain
     jsr waitForJoystick
     cmp #QUIT_CHAR_ASCII
     bne .newGame
-    beq .mainDone
+    jmp .mainDone               ; QUIT_CHAR_ASCII was triggered
 
     ; wait for and evaluate player input via keyboard or joystick
 .waitForInput
@@ -328,6 +337,38 @@ testPlayingFieldChanged
     lda #CHANGE_DETECTED
     rts               
 
+
+POINTS_OLD
+!byte $00, $00, $00
+; --------------------------------------------------
+; testPointsChanged compares POINTS and POINTS_OLD. If a difference was found it is signalled
+; to the player that points were awarded
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+testPointsChanged
+    lda POINTS
+    cmp POINTS_OLD
+    bne .pointsAwarded
+    lda POINTS+1
+    cmp POINTS_OLD+1
+    bne .pointsAwarded
+    lda POINTS+2
+    cmp POINTS_OLD+2
+    bne .pointsAwarded
+    jmp .saveOldPoints
+
+.pointsAwarded
+    jsr signalPointsWon
+.saveOldPoints
+    lda POINTS
+    sta POINTS_OLD
+    lda POINTS+1
+    sta POINTS_OLD+1
+    lda POINTS+2
+    sta POINTS_OLD+2
+    rts
 
 !macro makeTestMove .shiftRoutine {
     jsr .shiftRoutine
@@ -585,7 +626,6 @@ shiftRowLeft
     ; add points
     lda BUFFERTEMP, X
     jsr addPoints
-
     ; restore registers
     pla
     tay
