@@ -80,3 +80,21 @@
     adc .memAddr2+1
     sta .memAddr2+1
 }
+
+; --------------------------------------------------
+; This macro loads a byte from the address .data and returns its lower nibble in 
+; x and its upper nibble in y
+; --------------------------------------------------
+!macro splitByte .data {
+    ldy .data
+    tya
+    and #$0F
+    tax
+    tya
+    and #$F0
+    lsr
+    lsr 
+    lsr 
+    lsr 
+    tay
+}

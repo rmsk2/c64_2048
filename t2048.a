@@ -33,7 +33,6 @@ VISIBLE_TIMER = 1
 ; INPUT:  None
 ; OUTPUT: None
 ; --------------------------------------------------
-
 main
     jsr initDrawing
 

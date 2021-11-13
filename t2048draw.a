@@ -343,18 +343,19 @@ locateCursor
 clearScreen
     +load16BitImmediate .SCREEN_RAM_BASE, .SCREEN_RAM
 
-    ldx #0
-    lda #32
-    ldy #0    
+    ldx #0                             ; counts 256 byte block
+    lda #32                            ; 32 = blank
+    ldy #0                             ; counts bytes in block
 .nextByte
     sta (.SCREEN_RAM), Y
     iny
-    bne .nextByte
-    inc .SCREEN_RAM + 1
+    bne .nextByte                      ; zero flag is set upon overflow 255 => 0
+    inc .SCREEN_RAM + 1                ; increment hi byte => clear next block of 256 bytes
     inx
-    cpx #4
+    cpx #4                             ; clear 4 blocks of 256 bytes = 1024 bytes
     bne .nextByte
 
+    ; restore original pointer to screen ram
     +load16BitImmediate .SCREEN_RAM_BASE, .SCREEN_RAM
 
     rts
@@ -624,7 +625,8 @@ BIG_COL
 }
 
 ; --------------------------------------------------
-; askInputSelection 
+; askInputSelection draws the title screen ad waits for the user to select
+; joystick or keyboard as an input method
 ; 
 ; INPUT:  None
 ; OUTPUT: None

@@ -11,7 +11,7 @@
 
 
 ; --------------------------------------------------
-; initTimerInterrupt hooks the system interrupt vector an points it to a custom location
+; initTimerInterrupt hooks the system interrupt vector and points it to a custom location
 ; 
 ; INPUT:  None
 ; OUTPUT: None
@@ -24,7 +24,7 @@ initTimerInterrupt
 
 
 ; --------------------------------------------------
-; deInitTimeInterrupt restores the system interruot vector to its original value
+; deInitTimeInterrupt restores the system interrupt vector to its original value
 ; 
 ; INPUT:  None
 ; OUTPUT: None
@@ -34,22 +34,6 @@ deInitTimeInterrupt
     +load16BitImmediate .SYSTEM_INTERRUPT, .INTERRUPT_VECTOR
     cli
     rts
-
-
-!macro splitByte .data {
-    ldy .data
-    tya
-    and #$0F
-    tax
-    tya
-    and #$F0
-    lsr
-    lsr 
-    lsr 
-    lsr 
-    tay
-}
-
 
 ; --------------------------------------------------
 ; .interruptServiceRoutine renders the current time of the RTC and then jums to the origial ISR
@@ -78,6 +62,7 @@ deInitTimeInterrupt
     sta SECOND_ADDRESS + 1
     lda DEC_CHARS, y
     sta SECOND_ADDRESS
+
     lda .CIA_RTC_TENTH_SECONDS               ; unfreeze registers    
 
 .systemISR
@@ -103,7 +88,7 @@ resetAndStartRTC
 
 
 ; --------------------------------------------------
-; stopRTC freezes the RTC registers
+; stopRTC stops the RTC
 ; 
 ; INPUT:  None
 ; OUTPUT: None
