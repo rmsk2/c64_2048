@@ -649,3 +649,28 @@ askInputSelection
     +printAtPosImmediate 24, 0, .INPUT_QUESTION, .DATA_PTR, 35
 
     rts
+
+
+.FRAME_TMP
+!byte $00
+; --------------------------------------------------
+; signalIllegalMove gives feedback to the user that the chosesn move was invalid
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+signalIllegalMove
+    lda .FRAME_COLOR_ADR
+    sta .FRAME_TMP
+    lda #COLOR_ORANGE
+    sta .FRAME_COLOR_ADR
+    ldx #64
+    ldy #0
+.count256
+    iny
+    bne .count256
+    dex
+    bne .count256
+    lda .FRAME_TMP
+    sta .FRAME_COLOR_ADR
+    rts

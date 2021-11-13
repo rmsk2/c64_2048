@@ -74,10 +74,13 @@ main
 .mainLoop
     jsr testPlayingFieldChanged   ; compare to playing field saved before last move
     cmp #NO_CHANGE_DETECTED
-    beq .moveWasInvalid
+    bne .addNewChar
+    jsr signalIllegalMove
+    jmp .resumeAfterInvalid
 
+.addNewChar
     jsr add2AtRandomPos
-.moveWasInvalid
+.resumeAfterInvalid
     jsr renderPlayingField
 
     jsr lookForEleven
