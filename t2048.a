@@ -799,10 +799,10 @@ add2AtRandomPos
     rts
 
 !source "t2048draw.a"
-!source "random.a"
-!source "font.a"
 !source "timer_interrupt.a"
 !source "beep.a"
+!source "random.a"
+!source "font.a"
 
 
 ;TEST=0

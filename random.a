@@ -1,6 +1,5 @@
 !zone random
 
-SID_BASE = $D400
 USE_SID = 1
 
 initRandom
@@ -132,15 +131,6 @@ clockLFSR
 SEED_BYTES
 !byte $00, $00
 
-!macro clearSID {
-    ldx #0
-    lda #0
-.loopRegister
-    sta SID_BASE, x
-    inx
-    cpx #25
-    bne .loopRegister
-}
 
 .TMP_SID_COUNT
 !byte $00

@@ -4,8 +4,8 @@
 .COLOR_RAM_BASE =  $D800
 .FRAME_COLOR_ADR = $D020
 .BACKGROUND_COLOR_ADR = $D021
-.ORIGIN_LINE = 4
-.ORIGIN_COL = 6 
+.ORIGIN_LINE = 4 ; origin line of the playing field
+.ORIGIN_COL = 6  ; origin column of the playing field
 HOUR_ADDRESS = 1024 + 21 * 40 + 19
 MINUTE_ADDRESS = 1024 + 21 * 40 + 22
 SECOND_ADDRESS = 1024 + 21 * 40 + 25
@@ -62,6 +62,7 @@ initDrawing
 setOutputColor
     sta .CURRENT_COLOR
     rts
+
 
 ; --------------------------------------------------
 ; deInitDrawing deinitializes the drawing routines
@@ -276,10 +277,11 @@ renderPoints
 .TIME_TEXT
 !tx "time elapsed 00:00:00" 
 !ct pet
-; -------
+
 
 ; --------------------------------------------------
-; renderClock represents the elapsed time on the screen
+; renderClock represents the elapsed time on the screen. This draws only a placeholder
+; the elapsed time is filled by the interrupt handler
 ; 
 ; INPUT:  None
 ; OUTPUT: None
@@ -447,6 +449,13 @@ printStr
 !ct pet
 
 
+.PRINT_WIN_SIZE = 21
+; --------------------------------------------------
+; clearFrame clears a 21x5 frame roughly in the middle of the screen
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
 clearFrame
     +printAtPosImmediate .ORIGIN_LINE + 3, .ORIGIN_COL + 4, .CLEAR_BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
     +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .CLEAR_BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
@@ -472,7 +481,7 @@ gameOver
     +load16BitImmediate .PLAY_IT_AGAIN, .DATA_PTR
     jmp printQuestionFrame
 
-.PRINT_WIN_SIZE = 21
+
 
 .QUESTION_TEMP
 !byte $00, $00
@@ -689,7 +698,7 @@ signalIllegalMove
 ; --------------------------------------------------
 ; signalPointsWon gives feedback to the user that points were awarded
 ;
-; does nothing at the moment
+; Does nothing at the moment. Using a beep is annoying.
 ;
 ; INPUT:  None
 ; OUTPUT: None

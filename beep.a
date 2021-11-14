@@ -1,6 +1,66 @@
 !zone beep 
 
+SID_BASE = $D400
+TRIANGLE = 16
+SAWTOOTH = 32
+SQUARE = 64
 
+!macro clearSID {
+    ldx #0
+    lda #0
+.loopRegister
+    sta SID_BASE, x
+    inx
+    cpx #25
+    bne .loopRegister
+}
+
+!macro setBeepADSR .timeAttack, .timeDecay, .volumeSustain, .timeRelease, .voice {
+    lda #.timeAttack                        ; time to reach full volume
+    lsr
+    lsr
+    lsr
+    lsr
+    ora #.timeDecay                         ; time to fall to .volumeSustain
+    sta SID_BASE + 5 + ((.voice-1) * 7)
+    lda #.volumeSustain                     ; volume during sustain
+    lsr
+    lsr
+    lsr
+    lsr
+    ora #.timeRelease                       ; time to reach zero volume after sound is turned off (key bit = 0)
+    sta SID_BASE + 6 + ((.voice-1) * 7)     
+}
+
+!macro setFrequency .frequency, .voice {
+    +load16BitImmediate .frequency, SID_BASE + ((.voice-1) * 7)
+}
+
+!macro setGlobalVolume .value {
+    lda SID_BASE + 24
+    and #%11110000
+    ora #.value
+    sta SID_BASE + 24
+}
+
+!macro turnWaveOn .waveBit, .voice{
+    lda SID_BASE + 4 + ((.voice-1) * 7)
+    and #%10001110
+    ora #.waveBit
+    ora #1                                ; set key bit => turn sound on
+    sta SID_BASE + 4 + ((.voice-1) * 7)   ; make it happen
+}
+
+!macro turnWaveOff .waveBit, .voice{
+    lda SID_BASE + 4 + ((.voice-1) * 7)
+    and #%10001110
+    ora #.waveBit                         ; key bit was cleared in and
+    sta SID_BASE + 4 + ((.voice-1) * 7)   ; make it happen
+}
+
+!macro setSquareWidth .value, .voice {
+    +load16BitImmediate .value, SID_BASE + 2 + ((.voice-1) * 7)  ; set pulse width 
+}
 
 ; --------------------------------------------------
 ; beepIllegal gives feedback to the user that the chossen move was invalid
@@ -9,19 +69,12 @@
 ; OUTPUT: None
 ; --------------------------------------------------
 beepIllegal
-    lda #%00001111
-    sta SID_BASE +  24                ; set volume to maximum (15)
-    lda #%00100010
-    sta SID_BASE + 5                  ; attack 8ms, decay in 8 ms 
-    lda #%0000001
-    sta SID_BASE + 6                  ; volume at end of decay to 0, time for release 2ms
-    lda #180
-    sta SID_BASE                      ; frequency low byte
-    lda #20
-    sta SID_BASE + 1                  ; frequency hi byte
-    lda #%00100001
-    sta SID_BASE + 4                  ; saw tooth and turn sound on
-
+    +setGlobalVolume 15
+    +setBeepADSR 2, 2, 1, 0, 1                 ; time attack: 2, time decay: 2, volume sustain 1, time release 0, voice 1
+    ;+setBeepADSR 8, 8, 7, 0, 1 
+    +setFrequency $14B4, 1                     ; frequency $14B4
+    ;+setSquareWidth 32768, 1
+    +turnWaveOn SAWTOOTH, 1                    ; set SAWTOOTH and turn key bit on
     rts
 
 
@@ -32,7 +85,5 @@ beepIllegal
 ; OUTPUT: None
 ; --------------------------------------------------
 beepOff
-    lda #%00100000
-    sta SID_BASE + 4                  ; saw tooth and turn sound off
-
+    +turnWaveOff SAWTOOTH, 1                  ; set SWATOOTH and turn key bit off
     rts
