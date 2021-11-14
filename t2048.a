@@ -802,6 +802,7 @@ add2AtRandomPos
 !source "random.a"
 !source "font.a"
 !source "timer_interrupt.a"
+!source "beep.a"
 
 
 ;TEST=0

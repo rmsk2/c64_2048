@@ -1,0 +1,38 @@
+!zone beep 
+
+
+
+; --------------------------------------------------
+; beepIllegal gives feedback to the user that the chossen move was invalid
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+beepIllegal
+    lda #%00001111
+    sta SID_BASE +  24                ; set volume to maximum (15)
+    lda #%00100010
+    sta SID_BASE + 5                  ; attack 8ms, decay in 8 ms 
+    lda #%0000001
+    sta SID_BASE + 6                  ; volume at end of decay to 0, time for release 2ms
+    lda #180
+    sta SID_BASE                      ; frequency low byte
+    lda #20
+    sta SID_BASE + 1                  ; frequency hi byte
+    lda #%00100001
+    sta SID_BASE + 4                  ; saw tooth and turn sound on
+
+    rts
+
+
+; --------------------------------------------------
+; beepOff turns off sound
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+beepOff
+    lda #%00100000
+    sta SID_BASE + 4                  ; saw tooth and turn sound off
+
+    rts
