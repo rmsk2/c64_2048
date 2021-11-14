@@ -705,10 +705,4 @@ signalIllegalMove
 ; --------------------------------------------------
 signalPointsWon
     rts
-    ; flash frame green
-    ; lda .FRAME_COLOR_ADR
-    ; sta .FRAME_TMP
-    ; lda #COLOR_GREEN
-    ; sta .FRAME_COLOR_ADR
 
-    ; jmp .delayCount

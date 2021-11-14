@@ -4,6 +4,27 @@ SID_BASE = $D400
 TRIANGLE = 16
 SAWTOOTH = 32
 SQUARE = 64
+NOISE = 128
+
+; Volume values 0 - 15
+;
+; VALUE 	ATTACK RATE 	DECAY RATE 	RELEASE RATE
+; 0 	    2 ms 	        6 ms 	    6 ms
+; 1 	    8 ms 	        24 ms 	    24 ms
+; 2 	    16 ms 	        48 ms 	    48 ms
+; 3 	    24 ms 	        72 ms 	    72 ms
+; 4 	    38 ms 	        114 ms 	    114 ms
+; 5 	    56 ms 	        168 ms 	    168 ms
+; 6 	    68 ms 	        204 ms 	    204 ms
+; 7 	    80 ms 	        240 ms 	    240 ms
+; 8 	    100 ms 	        .3 sec 	    .3 sec
+; 9 	    .25 sec 	    .75 sec 	.75 sec
+; 10 	    .5 sec 	        1.5 sec 	1.5 sec
+; 11 	    .8 sec 	        2.4 sec 	2.4 sec
+; 12 	    1 sec 	        3 sec 	    3 sec
+; 13 	    3 sec 	        9 sec 	    9 sec
+; 14 	    5 sec 	        15 sec 	    15 sec
+; 15 	    8 sec 	        24 sec 	    24 sec
 
 !macro clearSID {
     ldx #0
@@ -45,7 +66,7 @@ SQUARE = 64
 
 !macro turnWaveOn .waveBit, .voice{
     lda SID_BASE + 4 + ((.voice-1) * 7)
-    and #%10001110
+    and #%00001111
     ora #.waveBit
     ora #1                                ; set key bit => turn sound on
     sta SID_BASE + 4 + ((.voice-1) * 7)   ; make it happen
@@ -53,13 +74,17 @@ SQUARE = 64
 
 !macro turnWaveOff .waveBit, .voice{
     lda SID_BASE + 4 + ((.voice-1) * 7)
-    and #%10001110
+    and #%00001110
     ora #.waveBit                         ; key bit was cleared in and
     sta SID_BASE + 4 + ((.voice-1) * 7)   ; make it happen
 }
 
 !macro setSquareWidth .value, .voice {
-    +load16BitImmediate .value, SID_BASE + 2 + ((.voice-1) * 7)  ; set pulse width 
+    lda #<.value
+    sta SID_BASE + 2 + ((.voice-1) * 7)
+    lda #>.value
+    and #$0F                              ; only the lower 4 bits are used
+    sta SID_BASE + 3 + ((.voice-1) * 7)
 }
 
 ; --------------------------------------------------
@@ -71,9 +96,7 @@ SQUARE = 64
 beepIllegal
     +setGlobalVolume 15
     +setBeepADSR 2, 2, 1, 0, 1                 ; time attack: 2, time decay: 2, volume sustain 1, time release 0, voice 1
-    ;+setBeepADSR 8, 8, 7, 0, 1 
     +setFrequency $14B4, 1                     ; frequency $14B4
-    ;+setSquareWidth 32768, 1
     +turnWaveOn SAWTOOTH, 1                    ; set SAWTOOTH and turn key bit on
     rts
 
