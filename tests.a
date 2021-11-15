@@ -55,70 +55,15 @@ testAllChangedChars
     rts
 
 
-.testSquare
-    +setGlobalVolume 15
-    +setBeepADSR 8, 10, 15, 7, 1 
-    +setFrequency $14B4, 1                     ; frequency $14B4
-    +setSquareWidth $300, 1
-    +turnWaveOn SQUARE, 1                    ; set SAWTOOTH and turn key bit on
-    rts
-
-
-.squareOff
-    +turnWaveOff SQUARE, 1                  ; set SWATOOTH and turn key bit off
-    rts
-
-
-.testTriangle
-    +setGlobalVolume 15
-    +setBeepADSR 8, 10, 15, 7, 1 
-    +setFrequency $14B4, 1                     ; frequency $14B4
-    +turnWaveOn TRIANGLE, 1                    ; set SAWTOOTH and turn key bit on
-    rts
-
-
-.triangleOff
-    +turnWaveOff TRIANGLE, 1                  ; set SWATOOTH and turn key bit off
-    rts
-
-.testSawtooth
-    +setGlobalVolume 15
-    +setBeepADSR 8, 10, 15, 7, 1 
-    +setFrequency $14B4, 1                     ; frequency $14B4
-    +turnWaveOn SAWTOOTH, 1                    ; set SAWTOOTH and turn key bit on
-    rts
-
-
-.sawtoothOff
-    +turnWaveOff SAWTOOTH, 1                  ; set SWATOOTH and turn key bit off
-    rts
-
-
-!macro testSoundW .onFunc, .offFunc {
-    jsr .onFunc
-
-    lda #10
-    sta TST_CNT
-
-.delayCount
-    ldx #255
-    ldy #0
-.count256
-    iny
-    bne .count256
-    dex
-    bne .count256
-    dec TST_CNT
-    bne .delayCount
-
-    jsr .offFunc    
-}
-
-TST_CNT
-!byte $00
 testSound
-    +testSoundW .testSquare, .squareOff
-    +testSoundW .testTriangle, .triangleOff
-    +testSoundW .testSawtooth, .sawtoothOff
+    +setGlobalVolume 15
+
+    +setBeepADSR 2, 2, 13, 2, 1                 ; time attack: 2, time decay: 2, volume sustain 1, time release 0, voice 1
+    +setFrequency $14B4, 1                      ; frequency $14B4
+
+    jsr waitForKey
+    +turnWaveOn TRIANGLE, 1                     ; set TRIANGLE and turn key bit on
+    jsr waitForKey
+    +turnWaveOff TRIANGLE, 1                    ; set TRIANGLE and turn key bit off
 
     rts
