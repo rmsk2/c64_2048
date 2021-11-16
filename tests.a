@@ -54,16 +54,26 @@ testAllChangedChars
     +printAtPosImmediate 0, 0, .ALL_CHARS, $A7, 26+10+3
     rts
 
+!ct scr
+.TXT_PRESS_KEY
+!tx "press key                     "
+.TXT_SOUND
+!tx "sound playing. press key again"
+.TXT_SND_OFF
+!tx "sound off                     "
+!ct pet
 
 testSound
     +setGlobalVolume 15
-
-    +setBeepADSR 2, 2, 13, 2, 1                 ; time attack: 2, time decay: 2, volume sustain 1, time release 0, voice 1
     +setFrequency $14B4, 1                      ; frequency $14B4
+    +setBeepADSR 2, 2, 13, 2, 1                 ; time attack: 2, time decay: 2, volume sustain 1, time release 0, voice 1
 
+    +printAtPosImmediate 0, 0, .TXT_PRESS_KEY, $A7, 30
     jsr waitForKey
     +turnWaveOn TRIANGLE, 1                     ; set TRIANGLE and turn key bit on
+    +printAtPosImmediate 0, 0, .TXT_SOUND, $A7, 30
     jsr waitForKey
     +turnWaveOff TRIANGLE, 1                    ; set TRIANGLE and turn key bit off
+    +printAtPosImmediate 0, 0, .TXT_SND_OFF, $A7, 30
 
     rts
