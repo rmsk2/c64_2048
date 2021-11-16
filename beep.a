@@ -38,17 +38,17 @@ NOISE = 128
 
 !macro setBeepADSR .timeAttack, .timeDecay, .volumeSustain, .timeRelease, .voice {
     lda #.timeAttack                        ; time to reach full volume
-    lsr
-    lsr
-    lsr
-    lsr
+    asl
+    asl
+    asl
+    asl
     ora #.timeDecay                         ; time to fall to .volumeSustain
     sta SID_BASE + 5 + ((.voice-1) * 7)
     lda #.volumeSustain                     ; volume during sustain
-    lsr
-    lsr
-    lsr
-    lsr
+    asl
+    asl
+    asl
+    asl
     ora #.timeRelease                       ; time to reach zero volume after sound is turned off (key bit = 0)
     sta SID_BASE + 6 + ((.voice-1) * 7)     
 }

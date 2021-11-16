@@ -64,6 +64,7 @@ testAllChangedChars
 !ct pet
 
 testSound
+    jsr clearScreen
     +setGlobalVolume 15
     +setFrequency $14B4, 1                      ; frequency $14B4
     +setBeepADSR 2, 2, 13, 2, 1                 ; time attack: 2, time decay: 2, volume sustain 1, time release 0, voice 1
