@@ -701,13 +701,14 @@ showTitleScreen
     lda USE_SOUND
     cmp #SOUND_ON
     beq .selectSoundOff
-    ; switch sound off
+    ; switch sound on
     +printAtPosImmediate 23, 0, .SOUND_QUESTION, .DATA_PTR, 35
     lda #SOUND_ON
     sta USE_SOUND
     jmp .waitInput
 
 .selectSoundOff
+    ; turn sound off
     +printAtPosImmediate 23, 0, .SOUND_QUESTION2, .DATA_PTR, 35
     lda #SOUND_OFF
     sta USE_SOUND
