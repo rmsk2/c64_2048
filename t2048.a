@@ -20,6 +20,8 @@ CHAR_UP = 87         ; "w"
 CHAR_DOWN = 83       ; "s"
 NO_TIMER = 0
 VISIBLE_TIMER = 1
+SOUND_ON = 1
+SOUND_OFF = 0
 
 
     ; init timer interrupt
@@ -38,19 +40,10 @@ main
 
     lda #KEYBOARD_SELECTED
     sta INPUT_METHOD
+    lda #SOUND_ON
+    sta USE_SOUND
 
-    jsr askInputSelection
-.askInputDevice
-    jsr waitForKey
-    cmp #$4a                    ; j => joystick
-    beq .selectJoystick
-    cmp #$4b                    ; k => keyboard
-    beq .newGame
-    jmp .askInputDevice         ; neither j nor k => try again
-
-.selectJoystick
-    lda #JOYSTICK_SELECTED
-    sta INPUT_METHOD
+    jsr showTitleScreen
 
 .newGame
     jsr initRandom
@@ -192,6 +185,8 @@ main
     rts
 
 
+USE_SOUND
+!byte 00
 SHOW_TIMER
 !byte $00
 INPUT_METHOD

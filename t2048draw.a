@@ -572,13 +572,6 @@ youWin
     jsr printStr    
 }
 
-!ct scr
-.INPUT_QUESTION
-!tx "    use joystick or keyboard [j/k]?"
-.AUTHOR
-!tx "zwei hoch 11. by martin grap [2021]"
-!ct pet
-
 BIG_TWO
 !byte $20, $20, $20, $20, $20, $20, $20, $20 ; ________
 !byte $20, $A0, $A0, $A0, $A0, $A0, $A0, $20 ; _******_
@@ -633,30 +626,100 @@ BIG_COL
     bne .nextLineStartScreen
 }
 
+!ct scr
+.INPUT_QUESTION
+!tx "    use keyboard     [f3] to toggle"
+.INPUT_QUESTION2
+!tx "    use joystick     [f3] to toggle"
+.SOUND_QUESTION
+!tx "    sound on         [f5] to toggle"
+.SOUND_QUESTION2
+!tx "    sound off        [f5] to toggle"
+
+.START_GAME
+!tx "    start game       [f1] to start "
+
+.AUTHOR
+!tx "zwei hoch 11. by martin grap [2021]"
+!ct pet
+
+.TITLE_KEY_PRESSED
+!byte $00
 ; --------------------------------------------------
-; askInputSelection draws the title screen ad waits for the user to select
+; showTitleScreen draws the title screen ad waits for the user to select
 ; joystick or keyboard as an input method
 ; 
 ; INPUT:  None
 ; OUTPUT: None
 ; --------------------------------------------------
-askInputSelection
+showTitleScreen
     lda #COLOR_BLUE
     sta .CURRENT_COLOR
 
     +load16BitImmediate 8, BIG_LINE_LEN
 
-    +printBigChar 9, 10, BIG_TWO, .DATA_PTR
-    +printBigChar 1, 17, BIG_ONE, .DATA_PTR
-    +printBigChar 1, 23, BIG_ONE, .DATA_PTR
+    +printBigChar 8, 10, BIG_TWO, .DATA_PTR
+    +printBigChar 0, 17, BIG_ONE, .DATA_PTR
+    +printBigChar 0, 23, BIG_ONE, .DATA_PTR
 
     ; set output color 
     lda #COLOR_RED
     sta .CURRENT_COLOR
 
-    +printAtPosImmediate 20, 2, .AUTHOR, .DATA_PTR, 35
-    +printAtPosImmediate 24, 0, .INPUT_QUESTION, .DATA_PTR, 35
+    +printAtPosImmediate 18, 2, .AUTHOR, .DATA_PTR, 35
+    +printAtPosImmediate 21, 0, .START_GAME, .DATA_PTR, 35
+    +printAtPosImmediate 22, 0, .INPUT_QUESTION, .DATA_PTR, 35
+    +printAtPosImmediate 23, 0, .SOUND_QUESTION, .DATA_PTR, 35
+    
 
+.waitInput
+    jsr waitForKey
+    sta .TITLE_KEY_PRESSED
+    cmp #$86                    ; F3
+    bne .checkF5
+    ; toggle input method
+    lda INPUT_METHOD
+    cmp #JOYSTICK_SELECTED
+    beq .selectKeyBoard
+    ; select Joystick
+    +printAtPosImmediate 22, 0, .INPUT_QUESTION2, .DATA_PTR, 35
+    lda #JOYSTICK_SELECTED
+    sta INPUT_METHOD
+    jmp .waitInput
+.selectKeyBoard
+    ; select keyboard
+    +printAtPosImmediate 22, 0, .INPUT_QUESTION, .DATA_PTR, 35
+    lda #KEYBOARD_SELECTED
+    sta INPUT_METHOD
+    jmp .waitInput
+
+ .checkF5
+    lda.TITLE_KEY_PRESSED      
+    cmp #$87                  ; F5
+    bne .checkF1
+    ; toggle sound settings
+    lda USE_SOUND
+    cmp #SOUND_ON
+    beq .selectSoundOff
+    ; switch sound off
+    +printAtPosImmediate 23, 0, .SOUND_QUESTION, .DATA_PTR, 35
+    lda #SOUND_ON
+    sta USE_SOUND
+    jmp .waitInput
+
+.selectSoundOff
+    +printAtPosImmediate 23, 0, .SOUND_QUESTION2, .DATA_PTR, 35
+    lda #SOUND_OFF
+    sta USE_SOUND
+    jmp .waitInput
+
+.checkF1
+    lda .TITLE_KEY_PRESSED
+    cmp #$85                    ; F1
+    beq .endStartScreen
+    jmp .waitInput              ; Not F1, F3, or F5
+
+.endStartScreen
     rts
 
 
@@ -670,8 +733,12 @@ askInputSelection
 ; --------------------------------------------------
 signalIllegalMove
     ; turn sound on and beep
+    lda USE_SOUND
+    cmp #SOUND_ON
+    bne .flashOnly
     jsr beepIllegal
     
+.flashOnly    
     ; flash frame orange
     lda .FRAME_COLOR_ADR
     sta .FRAME_TMP
@@ -688,9 +755,13 @@ signalIllegalMove
     lda .FRAME_TMP
     sta .FRAME_COLOR_ADR
 
+    lda USE_SOUND
+    cmp #SOUND_ON
+    bne .signalIllegalDone
     ; turn sound off
     jsr beepOff
 
+.signalIllegalDone
     rts
 
 
