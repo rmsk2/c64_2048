@@ -35,6 +35,12 @@ deInitTimeInterrupt
     cli
     rts
 
+.SAVED_COLOR_POINTER
+!byte $00, $00
+
+.INTRPT_COUNTER
+!byte $00
+
 ; --------------------------------------------------
 ; .interruptServiceRoutine renders the current time of the RTC and then jums to the origial ISR
 ; 
@@ -43,7 +49,7 @@ deInitTimeInterrupt
 ; --------------------------------------------------
 .interruptServiceRoutine
     lda SHOW_TIMER
-    beq .systemISR                           ; timer value is not to be rendered
+    beq .testEffect                           ; timer value is not to be rendered
  
     +splitByte .CIA_RTC_HOURS                ; this freezes the RTC registers
     lda DEC_CHARS, X
@@ -63,8 +69,54 @@ deInitTimeInterrupt
     lda DEC_CHARS, y
     sta SECOND_ADDRESS
 
-    lda .CIA_RTC_TENTH_SECONDS               ; unfreeze registers    
+    lda .CIA_RTC_TENTH_SECONDS               ; unfreeze registers
+    jmp .SYSTEM_INTERRUPT    
 
+.testEffect
+    lda RUN_TITLE_EFFECT
+    bne .doEffect
+    jmp .SYSTEM_INTERRUPT
+
+.doEffect
+    inc .INTRPT_COUNTER
+    lda .INTRPT_COUNTER
+    cmp #25
+    bne .systemISR
+
+    lda #0
+    sta .INTRPT_COUNTER
+
+    inc EFFECT_COLOR
+    lda EFFECT_COLOR
+    and #$0F
+    sta EFFECT_COLOR
+
+    +move16Bit $9e, .SAVED_COLOR_POINTER 
+    +load16BitImmediate $D80A, $9e
+
+    ldx #0                 ; counter for lines
+.loopEffectCol
+    ldy #0                 ; counter for columns
+    lda EFFECT_COLOR
+.loopLineEffect
+    sta ($9e), Y           ; store effect color in color RAM
+    iny
+    cpy #24            
+    bne .loopLineEffect
+
+    clc
+    lda $9E
+    adc #40
+    sta $9E
+    lda $9F
+    adc #0
+    sta $9F
+
+    inx
+    cpx #16
+    bne .loopEffectCol
+
+    +move16Bit .SAVED_COLOR_POINTER, $9e
 .systemISR
     jmp .SYSTEM_INTERRUPT
 

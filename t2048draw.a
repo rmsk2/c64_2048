@@ -637,7 +637,10 @@ BIG_COL
 !tx "    sound off        [f5] to toggle"
 
 .START_GAME
-!tx "    start game       [f1] to start "
+!tx "    start game       [f1]          "
+.QUIT_GAME
+!tx "    quit game        [f7]          "
+
 
 .AUTHOR
 !tx "zwei hoch 11. by martin grap [2021]"
@@ -670,6 +673,7 @@ showTitleScreen
     +printAtPosImmediate 21, 0, .START_GAME, .DATA_PTR, 35
     +printAtPosImmediate 22, 0, .INPUT_QUESTION, .DATA_PTR, 35
     +printAtPosImmediate 23, 0, .SOUND_QUESTION, .DATA_PTR, 35
+    +printAtPosImmediate 24, 0, .QUIT_GAME, .DATA_PTR, 35
     
 
 .waitInput
@@ -693,7 +697,7 @@ showTitleScreen
     sta INPUT_METHOD
     jmp .waitInput
 
- .checkF5
+.checkF5
     lda .TITLE_KEY_PRESSED
     cmp #$87                  ; F5
     bne .checkF1
@@ -717,8 +721,14 @@ showTitleScreen
 .checkF1
     lda .TITLE_KEY_PRESSED
     cmp #$85                    ; F1
+    bne .checkF7
+    rts
+
+.checkF7
+    lda .TITLE_KEY_PRESSED
+    cmp #$88                    ; F7
     beq .endStartScreen
-    jmp .waitInput              ; Not F1, F3, or F5
+    jmp .waitInput              ; Not F1, F3, F5 or F7
 
 .endStartScreen
     rts

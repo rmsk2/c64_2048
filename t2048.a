@@ -22,12 +22,24 @@ NO_TIMER = 0
 VISIBLE_TIMER = 1
 SOUND_ON = 1
 SOUND_OFF = 0
+EFFECT_OFF = 0
+EFFECT_ON =  1
+GAME_STOP = 0
+GAME_CONTINUE = 1
 
+
+    ; set up title effect
+    lda #EFFECT_ON
+    sta RUN_TITLE_EFFECT
+    lda #0
+    sta EFFECT_COLOR
+
+    ; set up timer
+    lda #NO_TIMER
+    sta SHOW_TIMER
 
     ; init timer interrupt
     jsr initTimerInterrupt
-    lda #NO_TIMER
-    sta SHOW_TIMER
 
 ; --------------------------------------------------
 ; main implements the main loop of the game
@@ -44,6 +56,14 @@ main
     sta USE_SOUND
 
     jsr showTitleScreen
+    tax
+    
+    lda #EFFECT_OFF
+    sta RUN_TITLE_EFFECT
+
+    cpx #$88                          ; F7 was pressed
+    bne .newGame
+    jmp .mainDone
 
 .newGame
     jsr initRandom
@@ -185,6 +205,10 @@ main
     rts
 
 
+RUN_TITLE_EFFECT
+!byte $00
+EFFECT_COLOR
+!byte $00
 USE_SOUND
 !byte 00
 SHOW_TIMER
