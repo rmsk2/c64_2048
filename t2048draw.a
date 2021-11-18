@@ -694,7 +694,7 @@ showTitleScreen
     jmp .waitInput
 
  .checkF5
-    lda.TITLE_KEY_PRESSED      
+    lda .TITLE_KEY_PRESSED
     cmp #$87                  ; F5
     bne .checkF1
     ; toggle sound settings
