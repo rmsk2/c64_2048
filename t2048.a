@@ -117,6 +117,7 @@ main
     bne .waitForInput            ; There are still possible moves. Wait for next input
 
     ; no more moves possible => game over
+    jsr addToHighScore
     jsr gameOver
     jsr stopRTC
 
@@ -299,6 +300,18 @@ OLDPLAYINGFIELD
 !byte $00, $00, $00, $00
 !byte $00, $00, $00, $00
 !byte $00, $00, $00, $00
+
+HIGHSCORES
+!byte $00, $00, $00
+!byte $00, $00, $00
+!byte $00, $00, $00
+!byte $00, $00, $00
+!byte $00, $00, $00
+!byte $00, $00, $00
+
+HI_POS_ADDR
+!byte <HIGHSCORES
+!byte >HIGHSCORES
 
 
 !macro copyField .source, .target {
@@ -815,6 +828,33 @@ add2AtRandomPos
     lda #01
     sta PLAYINGFIELD, X                    ; write a "2" at position X
     lda #PLACEMENT_SUCCESS                 ; all OK => return 0
+    rts
+
+
+.HI_SCORE_INDEX
+!byte $00
+;--------------------------------------------------
+; addToHighScore adds the last result to the high score list
+; 
+; INPUT:  None
+; OUTPUT: Modify high score list 
+; --------------------------------------------------
+addToHighScore
+    ldx .HI_SCORE_INDEX
+    lda POINTS
+    sta HIGHSCORES, x
+    inx
+    lda POINTS + 1
+    sta HIGHSCORES, x
+    inx
+    lda POINTS + 2
+    sta HIGHSCORES, x
+    inx
+    cpx #18
+    bne .copyHiDone
+    ldx #0
+.copyHiDone
+    stx .HI_SCORE_INDEX
     rts
 
 !source "t2048draw.a"

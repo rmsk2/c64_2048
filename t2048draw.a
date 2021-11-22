@@ -446,6 +446,8 @@ printStr
 !byte 32
 !byte 32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32
 !byte 32
+.MSG_RESULTS
+!tx "   best results    "
 !ct pet
 
 
@@ -466,6 +468,30 @@ clearFrame
     rts
 
 
+!macro createResLine .resData, .resTarget {
+    +splitByte .resData              
+    lda DEC_CHARS, X
+    sta .resTarget + 1
+    lda DEC_CHARS, y
+    sta .resTarget
+
+    +splitByte .resData + 1
+    lda DEC_CHARS, X
+    sta .resTarget + 3
+    lda DEC_CHARS, y
+    sta .resTarget + 2
+
+    +splitByte .resData + 2
+    lda DEC_CHARS, X
+    sta .resTarget + 5
+    lda DEC_CHARS, y
+    sta .resTarget + 4
+}
+
+!ct scr
+RESULTS_BUFFER
+!tx "             "
+!ct pet
 ; --------------------------------------------------
 ; gameOver prints GAME OVER on the screen
 ; 
@@ -479,12 +505,35 @@ gameOver
  
     +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .GAME_OVER_CHARS, .DATA_PTR, 9
     +load16BitImmediate .PLAY_IT_AGAIN, .DATA_PTR
-    jmp printQuestionFrame
+    ldx #6
+    jsr printQuestionFrameVariable
+
+    +printAtPosImmediate .ORIGIN_LINE + 7, .ORIGIN_COL + 5, .MSG_RESULTS, .DATA_PTR, .PRINT_WIN_SIZE-2
+
+    +createResLine HIGHSCORES, RESULTS_BUFFER
+    +createResLine HIGHSCORES + 3, RESULTS_BUFFER + 7    
+    +printAtPosImmediate .ORIGIN_LINE + 9, .ORIGIN_COL + 8, RESULTS_BUFFER, .DATA_PTR, 13
+
+    +createResLine HIGHSCORES + 6, RESULTS_BUFFER
+    +createResLine HIGHSCORES + 9, RESULTS_BUFFER + 7    
+    +printAtPosImmediate .ORIGIN_LINE + 10, .ORIGIN_COL + 8, RESULTS_BUFFER, .DATA_PTR, 13
+
+    +createResLine HIGHSCORES + 12, RESULTS_BUFFER
+    +createResLine HIGHSCORES + 15, RESULTS_BUFFER + 7    
+    +printAtPosImmediate .ORIGIN_LINE + 11, .ORIGIN_COL + 8, RESULTS_BUFFER, .DATA_PTR, 13
+
+    rts
 
 
 
 .QUESTION_TEMP
 !byte $00, $00
+.QUESTION_LINE_COUNT
+!byte $00
+.QUESTION_LINE
+!byte $00
+.QUESTION_COL
+!byte $00
 ; --------------------------------------------------
 ; printQuestionFrame draws text on the screen that is placed in a frame. The position
 ; of the frame is fixed as well as the size (currently 21 characters).
@@ -493,6 +542,9 @@ gameOver
 ; OUTPUT: None
 ; --------------------------------------------------
 printQuestionFrame
+    ldx #1
+printQuestionFrameVariable
+    stx .QUESTION_LINE_COUNT
     ; set output color 
     lda #COLOR_WHITE
     sta .CURRENT_COLOR
@@ -504,8 +556,16 @@ printQuestionFrame
     +printAtPosImmediate .ORIGIN_LINE + 3, .ORIGIN_COL + 4, .BLANKS, .DATA_PTR, .PRINT_WIN_SIZE
     +printAtPosImmediate .ORIGIN_LINE + 4, .ORIGIN_COL + 4, .BLANKS3, .DATA_PTR, .PRINT_WIN_SIZE
     +printAtPosImmediate .ORIGIN_LINE + 5, .ORIGIN_COL + 4, .FRAME_TEXT, .DATA_PTR, .PRINT_WIN_SIZE
-    +printAtPosImmediate .ORIGIN_LINE + 6, .ORIGIN_COL + 4, .BLANKS3, .DATA_PTR, .PRINT_WIN_SIZE
-    +printAtPosImmediate .ORIGIN_LINE + 7, .ORIGIN_COL + 4, .BLANKS2, .DATA_PTR, .PRINT_WIN_SIZE
+    lda #.ORIGIN_LINE + 6
+    sta .QUESTION_LINE
+    lda #.ORIGIN_COL + 4
+    sta .QUESTION_COL
+.printQuestionLoop
+    +printAtPos .QUESTION_LINE, .QUESTION_COL, .BLANKS3, .DATA_PTR, .PRINT_WIN_SIZE
+    inc .QUESTION_LINE
+    dec .QUESTION_LINE_COUNT
+    bne .printQuestionLoop
+    +printAtPos .QUESTION_LINE, .QUESTION_COL, .BLANKS2, .DATA_PTR, .PRINT_WIN_SIZE
 
     ; restore pointer to text
     +move16Bit .QUESTION_TEMP, .DATA_PTR 
