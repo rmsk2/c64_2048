@@ -78,3 +78,54 @@ testSound
     +printAtPosImmediate 0, 0, .TXT_SND_OFF, $A7, 30
 
     rts
+
+
+testPointCompare
+    lda #$99
+    sta HIGHSCORES
+    lda #$99
+    sta HIGHSCORES + 1
+    lda #$99
+    sta HIGHSCORES + 2
+    lda #$77
+    sta HIGHSCORES + 3
+    lda #$77
+    sta HIGHSCORES + 4
+    lda #$77
+    sta HIGHSCORES + 5
+    lda #$77
+    sta HIGHSCORES + 6
+    lda #$77
+    sta HIGHSCORES + 7
+    lda #$77
+    sta HIGHSCORES + 8
+    lda #$77
+    sta HIGHSCORES + 9
+    lda #$77
+    sta HIGHSCORES + 10
+    lda #$78
+    sta HIGHSCORES + 11
+
+    ldx #9
+    jsr comparePoints
+    sta $0400               ; => $FF
+    ldx #6
+    jsr comparePoints
+    sta $0401               ; => $00
+    ldx #3
+    jsr comparePoints
+    sta $0402               ; => $01
+    rts
+
+ 
+ testFlash
+    lda #COLOR_DARK_GREY
+    jsr flashFrame
+    rts
+
+
+testSprite
+    jsr diskSymbolOn
+    jsr waitForKey
+    jsr diskSymbolOff
+    rts

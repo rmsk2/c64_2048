@@ -9,6 +9,10 @@
 HOUR_ADDRESS = 1024 + 21 * 40 + 19
 MINUTE_ADDRESS = 1024 + 21 * 40 + 22
 SECOND_ADDRESS = 1024 + 21 * 40 + 25
+SPRITE_1_VECTOR = 2040
+SPRITE_1_BLOCK = $BF
+SPRITE_1_ADDRESS = SPRITE_1_BLOCK * $40
+VIC_BASE = $D000
 
 
 COLOR_BLACK = 0
@@ -488,24 +492,35 @@ clearFrame
     sta .resTarget + 4
 }
 
-!ct scr
-RESULTS_BUFFER
-!tx "             "
-!ct pet
+
 ; --------------------------------------------------
-; gameOver prints GAME OVER on the screen
+; printGameOver prints GAME OVER and the highscore list on the screen
 ; 
 ; INPUT:  None
 ; OUTPUT: None
 ; --------------------------------------------------
-gameOver
+printGameOver
     ; set output color 
     lda #COLOR_WHITE
     sta .CURRENT_COLOR
  
     +printAtPosImmediate .ORIGIN_LINE - 3, .ORIGIN_COL, .GAME_OVER_CHARS, .DATA_PTR, 9
     +load16BitImmediate .PLAY_IT_AGAIN, .DATA_PTR
-    ldx #6
+    rts
+
+
+!ct scr
+RESULTS_BUFFER
+!tx "             "
+!ct pet
+; --------------------------------------------------
+; gameOver prints the highscore list on the screen
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+gameOver
+    ldx #7
     jsr printQuestionFrameVariable
 
     +printAtPosImmediate .ORIGIN_LINE + 7, .ORIGIN_COL + 5, .MSG_RESULTS, .DATA_PTR, .PRINT_WIN_SIZE-2
@@ -794,8 +809,6 @@ showTitleScreen
     rts
 
 
-.FRAME_TMP
-!byte $00
 ; --------------------------------------------------
 ; signalIllegalMove gives feedback to the user that the chosesn move was invalid
 ; 
@@ -810,21 +823,8 @@ signalIllegalMove
     jsr beepIllegal
     
 .flashOnly    
-    ; flash frame orange
-    lda .FRAME_COLOR_ADR
-    sta .FRAME_TMP
     lda #COLOR_ORANGE
-    sta .FRAME_COLOR_ADR
-.delayCount
-    ldx #64
-    ldy #0
-.count256
-    iny
-    bne .count256
-    dex
-    bne .count256
-    lda .FRAME_TMP
-    sta .FRAME_COLOR_ADR
+    jsr flashFrame
 
     lda USE_SOUND
     cmp #SOUND_ON
@@ -836,6 +836,33 @@ signalIllegalMove
     rts
 
 
+.FRAME_TMP
+!byte $00
+; --------------------------------------------------
+; flashFrame does flash the frame in the given color
+;
+; INPUT:  Colorcode in accu
+; OUTPUT: None
+; --------------------------------------------------
+flashFrame
+    tax
+    ; flash frame
+    lda .FRAME_COLOR_ADR                              ; load current color
+    sta .FRAME_TMP                                    ; save it in temp location
+    txa                                               ; load desired color
+    sta .FRAME_COLOR_ADR                              ; use it to set the frame color
+.delayCount
+    ldx #64
+    ldy #0
+.count256
+    iny
+    bne .count256
+    dex
+    bne .count256
+    lda .FRAME_TMP
+    sta .FRAME_COLOR_ADR                              ; restore original color
+
+    rts
 
 ; --------------------------------------------------
 ; signalPointsWon gives feedback to the user that points were awarded
@@ -848,3 +875,78 @@ signalIllegalMove
 signalPointsWon
     rts
 
+
+FLOPPY_ICON
+!byte %11111111, %11111111, %11111111
+!byte %11000000, %00000000, %00011111
+!byte %11000111, %11100110, %00011111
+!byte %11000000, %00000000, %00011100
+!byte %11011101, %11100111, %00011100
+!byte %11000000, %00000000, %00011100
+!byte %11111111, %11111111, %11111111
+!byte %11111111, %11111111, %11111111
+!byte %11111111, %11111111, %11111111
+!byte %11111111, %11000011, %11111111
+!byte %11111111, %10000001, %11111111
+!byte %11111111, %10000001, %11111111
+!byte %11111111, %11000011, %11111111
+!byte %11111111, %11111111, %11111111
+!byte %11111111, %11111111, %11111111
+!byte %11111111, %11100111, %11111111
+!byte %11111111, %11100111, %11111111
+!byte %11111111, %11100111, %11111111
+!byte %11111111, %11100111, %11111111
+!byte %11111111, %11111111, %11111111
+!byte %11111111, %11111111, %11111111
+
+
+; --------------------------------------------------
+; diskSymbolOn shows a floppy sprite on screen
+;
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+diskSymbolOn
+    ldx #0
+.copySprite
+    lda FLOPPY_ICON, x
+    sta SPRITE_1_ADDRESS, x
+    inx
+    cpx #63
+    bne .copySprite
+
+    ; set sprite block
+    lda #SPRITE_1_BLOCK
+    sta SPRITE_1_VECTOR
+
+    ; set sprite X position $135 = 309
+    lda #$35
+    sta VIC_BASE
+    lda VIC_BASE + 16
+    ora #1
+    sta VIC_BASE + 16
+    ; set sprite Y position
+    lda #220
+    sta VIC_BASE + 1
+
+    ; turn sprite on
+    lda VIC_BASE +  21
+    ora #1
+    sta VIC_BASE + 21
+
+    rts
+
+
+; --------------------------------------------------
+; diskSymbolOff turns off a floppy sprite on screen
+;
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+diskSymbolOff
+    ; turn sprite off
+    lda VIC_BASE +  21
+    and #$FE
+    sta VIC_BASE + 21
+
+    rts

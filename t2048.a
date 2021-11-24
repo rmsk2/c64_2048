@@ -26,6 +26,8 @@ EFFECT_OFF = 0
 EFFECT_ON =  1
 GAME_STOP = 0
 GAME_CONTINUE = 1
+NO_NEW_HI_SCORE = 0
+ADDED_HI_SCORE_VALUE = 1
 
 
     ; set up title effect
@@ -55,6 +57,9 @@ main
     lda #SOUND_ON
     sta USE_SOUND
 
+    jsr diskSymbolOn
+    jsr loadHiScore
+    jsr diskSymbolOff
     jsr showTitleScreen
     tax
     
@@ -66,29 +71,7 @@ main
     jmp .mainDone
 
 .newGame
-    jsr initRandom
-    jsr clearScreen
-    jsr clearPlayingField
-    jsr renderClock
-    jsr resetAndStartRTC
-    
-    ; clear result counter
-    lda #00
-    sta POINTS
-    sta POINTS+1
-    sta POINTS+2
-
-    ; clear old result
-    sta POINTS_OLD
-    sta POINTS_OLD+1
-    sta POINTS_OLD+2
-
-    jsr savePlayingField
-    jsr add2AtRandomPos
-    
-    lda #VISIBLE_TIMER
-    sta SHOW_TIMER
-
+    jsr initGame
 .mainLoop
     jsr testPlayingFieldChanged   ; compare to playing field saved before last move
     cmp #NO_CHANGE_DETECTED
@@ -117,7 +100,18 @@ main
     bne .waitForInput            ; There are still possible moves. Wait for next input
 
     ; no more moves possible => game over
+    jsr printGameOver
     jsr addToHighScore
+    cmp #ADDED_HI_SCORE_VALUE
+    bne .over1
+    jsr diskSymbolOn
+    jsr saveHiScore
+    jsr diskSymbolOff
+    cmp #DISK_IO_ERR
+    bne .over1
+    lda #COLOR_DARK_GREY
+    jsr flashFrame
+.over1
     jsr gameOver
     jsr stopRTC
 
@@ -137,8 +131,10 @@ main
 .useJoystickPlayAgain
     jsr waitForJoystick
     cmp #QUIT_CHAR_ASCII
-    bne .newGame
+    bne .newGameJmp
     jmp .mainDone               ; QUIT_CHAR_ASCII was triggered
+.newGameJmp
+    jmp .newGame
 
     ; wait for and evaluate player input via keyboard or joystick
 .waitForInput
@@ -230,6 +226,38 @@ POWERS
 !byte $10, $24
 !byte $20, $48
 
+
+; --------------------------------------------------
+; initGame inits a new game
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+initGame
+    jsr initRandom
+    jsr clearScreen
+    jsr clearPlayingField
+    jsr renderClock
+    jsr resetAndStartRTC
+    
+    ; clear result counter
+    lda #00
+    sta POINTS
+    sta POINTS+1
+    sta POINTS+2
+
+    ; clear old result
+    sta POINTS_OLD
+    sta POINTS_OLD+1
+    sta POINTS_OLD+2
+
+    jsr savePlayingField
+    jsr add2AtRandomPos
+    
+    lda #VISIBLE_TIMER
+    sta SHOW_TIMER
+    rts    
+
 ; --------------------------------------------------
 ; Wait for a key and return ASCII Code of key in Accumulator
 ; 
@@ -308,10 +336,8 @@ HIGHSCORES
 !byte $00, $00, $00
 !byte $00, $00, $00
 !byte $00, $00, $00
-
-HI_POS_ADDR
-!byte <HIGHSCORES
-!byte >HIGHSCORES
+LATEST_SCORE
+!byte $00, $00, $00
 
 
 !macro copyField .source, .target {
@@ -831,30 +857,146 @@ add2AtRandomPos
     rts
 
 
-.HI_SCORE_INDEX
+.NEW_HI_SCORE_VALUE
 !byte $00
 ;--------------------------------------------------
-; addToHighScore adds the last result to the high score list
+; addToHighScore adds the last result to the high score list using bubble
+; sort to find the right spot
 ; 
 ; INPUT:  None
-; OUTPUT: Modify high score list 
+; OUTPUT: accu contains nonzero value in case a new
+; hi score value was added 
 ; --------------------------------------------------
 addToHighScore
-    ldx .HI_SCORE_INDEX
+    lda #NO_NEW_HI_SCORE
+    sta .NEW_HI_SCORE_VALUE
+    jsr saveCurrentPoints
+
+    ldx #18
+.bubble
+    jsr comparePoints
+    cmp #$FF                   
+    bne .doneAddHiScore           ; current value is equal or smaller as the one above it => we are done
+    jsr swapPoints                ; bubble current value up
+    lda #ADDED_HI_SCORE_VALUE
+    sta .NEW_HI_SCORE_VALUE
+    dex                           ; move up one value
+    dex
+    dex
+    cpx #0                        ; we have reached the top, we are done
+    bne .bubble
+
+.doneAddHiScore
+    lda .NEW_HI_SCORE_VALUE
+    rts
+
+
+;--------------------------------------------------
+; comparePoints compares two 3 byte high score values referenced through the 
+; x-register. The value referenced is compared with the one preceeding it
+; 
+; INPUT:  index of source for comparison in x (3, 6, 9, 12, 15, 18)
+; OUTPUT: 0, 1, -1 (0xFF) in accu depending whether the referenced value is
+; =, < or > of the one preceeding it in the high score list  
+; --------------------------------------------------
+comparePoints
+    txa
+    tay
+    ; generate previous index: y = x - 3
+    dey
+    dey
+    dey
+    ; compare MSB
+    lda HIGHSCORES, X
+    cmp HIGHSCORES, Y
+    beq .next1                 ; values are equal continue to compare
+    bcc .smaller               ; value referenced by x is smaller as the one referenced by y
+    bcs .larger                ; value referenced by x is larger as the one referenced by y 
+.next1
+    ; compare medium significant byte
+    lda HIGHSCORES + 1, X
+    cmp HIGHSCORES + 1, Y
+    beq .next2                 ; values are equal up to this positon, continue to compare
+    bcc .smaller
+    bcs .larger
+.next2
+    ; compare LSB
+    lda HIGHSCORES + 2, X
+    cmp HIGHSCORES + 2, Y
+    beq .equal                 ; values are overall equal
+    bcc .smaller
+    bcs .larger
+.smaller
+    lda #1
+    rts
+.larger
+    lda #0xFF
+    rts
+.equal
+    lda #0
+    rts
+
+
+
+.SWAP_TEMP
+!byte $00
+;--------------------------------------------------
+; swapPoints swaps two 3 byte high score values referenced through the 
+; x-register. The value referenced is swapped with the one preceeding it
+; 
+; INPUT:  index of source for swapping in x (3, 6, 9, 12, 15, 18)
+; OUTPUT: None  
+; --------------------------------------------------
+swapPoints
+    txa
+    tay
+    ; generate previous index: y = x - 3
+    dey
+    dey
+    dey
+
+    ; swap most signifiatn byte
+    lda HIGHSCORES, y
+    sta .SWAP_TEMP
+    lda HIGHSCORES, x
+    sta HIGHSCORES, y
+    lda .SWAP_TEMP
+    sta HIGHSCORES, x
+
+    ; swap medium signifiatn byte
+    lda HIGHSCORES + 1, y
+    sta .SWAP_TEMP
+    lda HIGHSCORES + 1, x
+    sta HIGHSCORES + 1, y
+    lda .SWAP_TEMP
+    sta HIGHSCORES + 1, x
+
+    ; swap lwast significatn byte
+    lda HIGHSCORES + 2, y
+    sta .SWAP_TEMP
+    lda HIGHSCORES + 2, x
+    sta HIGHSCORES + 2, y
+    lda .SWAP_TEMP
+    sta HIGHSCORES + 2, x
+
+    rts
+
+
+;--------------------------------------------------
+; saveCurrentPoints copies the current value of achieved points to the
+; end of the high score list
+; 
+; INPUT:  None
+; OUTPUT: None  
+; --------------------------------------------------
+saveCurrentPoints
     lda POINTS
-    sta HIGHSCORES, x
-    inx
+    sta LATEST_SCORE
     lda POINTS + 1
-    sta HIGHSCORES, x
-    inx
+    sta LATEST_SCORE + 1
     lda POINTS + 2
-    sta HIGHSCORES, x
-    inx
-    cpx #18
-    bne .copyHiDone
-    ldx #0
-.copyHiDone
-    stx .HI_SCORE_INDEX
+    sta LATEST_SCORE + 2
+
     rts
 
 !source "t2048draw.a"
@@ -862,7 +1004,7 @@ addToHighScore
 !source "beep.a"
 !source "random.a"
 !source "font.a"
-
+!source "disk_io.a"
 
 ;TEST=0
 !ifdef TEST {

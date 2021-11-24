@@ -1,0 +1,83 @@
+!zone diskio
+
+DISK_IO_OK = 0
+DISK_IO_ERR = 1
+SETNAM = $FFBD
+SETLFS = $FFBA
+LOAD = $FFD5
+SAVE = $FFD8
+
+FILE_NAME_WRITE_LEN = 17
+FILE_NAME_WRITE
+!tx "@:hiscore.dat,s,w"
+
+FILE_NAME_READ_LEN = 15
+FILE_NAME_READ
+!tx "hiscore.dat,s,r"
+
+
+; --------------------------------------------------
+; saveHiScore saves the hi score to disk
+; 
+; INPUT:  None
+; OUTPUT: result DISK_IO_OK or DISK_IO_ERR in accu
+; --------------------------------------------------
+saveHiScore
+    ; open 1,8,0,"@:hiscore.dat,s,w"
+    lda #FILE_NAME_WRITE_LEN                ; file name length
+    ldx #<FILE_NAME_WRITE
+    ldy #>FILE_NAME_WRITE
+    jsr SETNAM
+
+    lda #$01                                ; logical file number 1
+    ldx #$08                                ; device number 8
+    ldy #$00                                ; secondary address 0
+    jsr SETLFS
+
+    ; start address of block to save
+    lda #<HIGHSCORES
+    sta $c1
+    lda #>HIGHSCORES
+    sta $c2
+    ; end address of block to save
+    ldx #<(HIGHSCORES + 17)
+    ldy #>(HIGHSCORES + 17)
+    lda #$c1
+    jsr SAVE
+    bcs .saveError
+    lda #DISK_IO_OK
+    rts
+.saveError
+    lda #DISK_IO_ERR
+    rts
+
+
+; --------------------------------------------------
+; loadHiScore loads the hi score from disk into RAM
+; 
+; INPUT:  None
+; OUTPUT: result DISK_IO_OK or DISK_IO_ERR in accu
+; --------------------------------------------------
+loadHiScore
+    ; open 1,8,0,"hiscore.dat,s,r"
+    lda #FILE_NAME_READ_LEN           ; file name length
+    ldx #<FILE_NAME_READ
+    ldy #>FILE_NAME_READ
+    jsr SETNAM
+
+    lda #$01                          ; logical file number 1
+    ldx #$08                          ; device number 8
+    ldy #$00                          ; secondary address 0 
+    jsr SETLFS
+
+    ; set address of receiving buffer
+    ldx #<HIGHSCORES
+    ldy #>HIGHSCORES
+    lda #$00                          ; do load instead of a verify
+    jsr LOAD
+    bcs .loadError
+    lda #DISK_IO_OK
+    rts
+.loadError
+    lda #DISK_IO_ERR
+    rts
