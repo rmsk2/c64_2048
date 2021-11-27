@@ -129,3 +129,24 @@ testSprite
     jsr waitForKey
     jsr diskSymbolOff
     rts
+
+
+.TEST_DATA1
+!tx "00"
+.TEST_DATA2
+!tx "48"
+.TEST_DATA3
+!tx "49"
+
+testAsciiParser
+    +load16BitImmediate .TEST_DATA1, $FB
+    jsr asciiToByte
+    sta $0400
+    +load16BitImmediate .TEST_DATA2, $FB
+    jsr asciiToByte
+    sta $0401
+    +load16BitImmediate .TEST_DATA3, $FB
+    jsr asciiToByte
+    sta $0402
+    
+    rts
