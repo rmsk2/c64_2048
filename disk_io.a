@@ -7,13 +7,15 @@ SETLFS = $FFBA
 LOAD = $FFD5
 SAVE = $FFD8
 
-FILE_NAME_WRITE_LEN = 17
-FILE_NAME_WRITE
-!tx "@:hiscore.dat,s,w"
+; interesting artice about save-@ bug: https://www.atarimagazines.com/compute/issue65/save_with_replace.php
 
-FILE_NAME_READ_LEN = 15
+FILE_NAME_WRITE_LEN = 18
+FILE_NAME_WRITE
+!tx "@0:hiscore.dat,s,w"
+
+FILE_NAME_READ_LEN = 16
 FILE_NAME_READ
-!tx "hiscore.dat,s,r"
+!tx "0:hiscore.dat,s,r"
 
 
 ; --------------------------------------------------
