@@ -9,9 +9,9 @@
 HOUR_ADDRESS = 1024 + 21 * 40 + 19
 MINUTE_ADDRESS = 1024 + 21 * 40 + 22
 SECOND_ADDRESS = 1024 + 21 * 40 + 25
-SPRITE_1_VECTOR = 2040
-SPRITE_1_BLOCK = $BF
-SPRITE_1_ADDRESS = SPRITE_1_BLOCK * $40
+SPRITE_0_VECTOR = 2040
+SPRITE_0_BLOCK = $BF
+SPRITE_0_ADDRESS = SPRITE_0_BLOCK * $40
 VIC_BASE = $D000
 
 
@@ -915,26 +915,30 @@ diskSymbolOn
     ldx #0
 .copySprite
     lda FLOPPY_ICON, x
-    sta SPRITE_1_ADDRESS, x
+    sta SPRITE_0_ADDRESS, x
     inx
     cpx #63
     bne .copySprite
 
-    ; set sprite block for sprite 1
-    lda #SPRITE_1_BLOCK
-    sta SPRITE_1_VECTOR
+    ; set sprite block for sprite 0
+    lda #SPRITE_0_BLOCK
+    sta SPRITE_0_VECTOR
 
-    ; set sprite X position $135 = 309 for sprite 1
+    ; set sprite X position $135 = 309 for sprite 0
     lda #$35
     sta VIC_BASE
     lda VIC_BASE + 16
     ora #1
     sta VIC_BASE + 16
-    ; set sprite 1 Y position
+    ; set sprite 0 Y position
     lda #220
     sta VIC_BASE + 1
 
-    ; turn sprite 1 on
+    ; set color of sprite 0
+    lda #COLOR_WHITE
+    sta VIC_BASE + 39
+
+    ; turn sprite 0 on
     lda VIC_BASE +  21
     ora #1
     sta VIC_BASE + 21
@@ -949,7 +953,7 @@ diskSymbolOn
 ; OUTPUT: None
 ; --------------------------------------------------
 diskSymbolOff
-    ; turn sprite 1 off
+    ; turn sprite 0 off
     lda VIC_BASE +  21
     and #$FE
     sta VIC_BASE + 21
