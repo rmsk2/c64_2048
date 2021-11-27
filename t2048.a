@@ -59,6 +59,11 @@ main
 
     jsr diskSymbolOn
     jsr loadHiScore
+    cmp #DISK_IO_OK
+    beq .continueStart
+    lda #COLOR_DARK_GREY
+    jsr flashFrame
+.continueStart
     jsr diskSymbolOff
     jsr showTitleScreen
     tax
@@ -106,12 +111,12 @@ main
     bne .over1
     jsr diskSymbolOn
     jsr saveHiScore
-    jsr diskSymbolOff
-    cmp #DISK_IO_ERR
-    bne .over1
+    cmp #DISK_IO_OK
+    beq .over1
     lda #COLOR_DARK_GREY
     jsr flashFrame
 .over1
+    jsr diskSymbolOff
     jsr gameOver
     jsr stopRTC
 

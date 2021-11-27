@@ -4,8 +4,15 @@ DISK_IO_OK = 0
 DISK_IO_ERR = 1
 SETNAM = $FFBD
 SETLFS = $FFBA
+OPEN = $FFC0
 LOAD = $FFD5
+CLOSE = $FFC3
+CLRCHN = $FFCC
 SAVE = $FFD8
+CHKIN = $FFC6
+READST = $FFB7
+CHRIN = $FFCF
+
 
 ; interesting artice about save-@ bug: https://www.atarimagazines.com/compute/issue65/save_with_replace.php
 
@@ -13,7 +20,7 @@ FILE_NAME_WRITE_LEN = 18
 FILE_NAME_WRITE
 !tx "@0:hiscore.dat,s,w"
 
-FILE_NAME_READ_LEN = 16
+FILE_NAME_READ_LEN = 17
 FILE_NAME_READ
 !tx "0:hiscore.dat,s,r"
 
@@ -47,7 +54,7 @@ saveHiScore
     lda #$c1
     jsr SAVE
     bcs .saveError
-    lda #DISK_IO_OK
+    jsr readAndEvalErrorChannel
     rts
 .saveError
     lda #DISK_IO_ERR
@@ -78,8 +85,103 @@ loadHiScore
     lda #$00                          ; do load instead of a verify
     jsr LOAD
     bcs .loadError
-    lda #DISK_IO_OK
+    jsr readAndEvalErrorChannel
     rts
 .loadError
     lda #DISK_IO_ERR
+    rts
+
+
+ERROR_MSG_BUFFER
+!byte $00, $00, $00, $00, $00, $00, $00, $00
+!byte $00, $00, $00, $00, $00, $00, $00, $00
+!byte $00, $00, $00, $00, $00, $00, $00, $00
+!byte $00, $00, $00, $00, $00, $00, $00, $00
+.ERR_BYTE_COUNTER
+!byte $00
+; --------------------------------------------------
+; readErrorChannel Reads the current drive status. This can lock up
+; if device 8 is not present
+; 
+; INPUT:  None
+; OUTPUT: error code in accu
+; --------------------------------------------------
+readErrorChannel
+    ; set error code to "00", ie OK
+    lda #48
+    sta ERROR_MSG_BUFFER
+    sta ERROR_MSG_BUFFER + 1
+    ; open 15,8,15
+    lda #0                            ; no file name
+    ldx #0
+    ldy #0
+    jsr SETNAM
+
+    lda #15                           ; logical file number 15
+    ldx #8                            ; device number 8
+    ldy #15                           ; secondary address 15
+    jsr SETLFS
+
+    jsr OPEN                          ; open error channel
+    bcs .checkError                   ; open failed
+
+    ldx #15
+    jsr CHKIN                         ; use file 15 as input
+
+    lda #0
+    sta .ERR_BYTE_COUNTER             ; set buffer index to 0
+.loopErrorChannel
+    jsr READST                        ; read status word
+    bne .close                        ; test for eof/error
+    jsr CHRIN                         ; read character from error channel
+    ldx .ERR_BYTE_COUNTER
+    cpx #32                           ; have we exhausted the buffer size?
+    beq .loopErrorChannel             ; yes, do not store the received byte
+    sta ERROR_MSG_BUFFER, X           ; there is room left in the buffer => store byte
+    inx                               ; advance index to next storage location
+    stx .ERR_BYTE_COUNTER
+    jmp .loopErrorChannel             ; read next byte
+
+.close 
+    lda #15                           
+    jsr CLOSE                         ; close file 15
+    jsr CLRCHN                        ; restore default input and output channels
+
+    rts
+.checkError
+    ; room for additional error handling
+    jmp .close                        ; even if open failed we have to close the file
+
+
+.ERR_CODE_CONV_HELP
+!byte $00
+; --------------------------------------------------
+; readAndevalErrorChannel Reads the current drive status and evaluates the
+; returned message. This can lock up if device 8 is not present.
+; 
+; INPUT:  None
+; OUTPUT: error code in accu
+; --------------------------------------------------
+readAndEvalErrorChannel
+    jsr readErrorChannel
+    lda ERROR_MSG_BUFFER
+    sec
+    sbc #48
+    tax                              ; save value of first char
+    asl
+    asl              
+    asl                              ; accu = accu * 8
+    sta .ERR_CODE_CONV_HELP
+    txa                              ; restore original value
+    asl                              ; accu = accu * 2 
+    clc
+    adc .ERR_CODE_CONV_HELP          ; accu now contains value of first digit
+    sta .ERR_CODE_CONV_HELP          ; store original_value * 8 + original_value * 2 = original_value * 10 
+    lda ERROR_MSG_BUFFER + 1
+    sec
+    sbc #48                          ; add value of second digit
+    clc
+    adc .ERR_CODE_CONV_HELP
+    clc
+
     rts
