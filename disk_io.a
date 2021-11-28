@@ -13,8 +13,6 @@ CHKIN = $FFC6
 READST = $FFB7
 CHRIN = $FFCF
 
-.TMP_PTR = $FB;$FC
-
 
 ; interesting artice about save-@ bug: https://www.atarimagazines.com/compute/issue65/save_with_replace.php
 
@@ -164,7 +162,7 @@ readErrorChannel
 ; --------------------------------------------------
 readAndEvalErrorChannel
     jsr readErrorChannel
-    +load16BitImmediate ERROR_MSG_BUFFER, .TMP_PTR
+    +load16BitImmediate ERROR_MSG_BUFFER, TMP_PTR
     jsr asciiToByte
     rts
 
@@ -172,15 +170,15 @@ readAndEvalErrorChannel
 .ERR_CODE_CONV_HELP
 !byte $00
 ; --------------------------------------------------
-; asciiToByte converts the two digit string referenced via .TMP_PTR 
+; asciiToByte converts the two digit string referenced via TMP_PTR 
 ; to a numeric value that is stored in the accu
 ; 
-; INPUT:  .TMP_PTR is set to buffer
+; INPUT:  TMP_PTR is set to buffer
 ; OUTPUT: Numeric value in accu
 ; --------------------------------------------------
 asciiToByte
     ldy #0
-    lda (.TMP_PTR), y
+    lda (TMP_PTR), y
     sec
     sbc #48
     tax                              ; save value of first char
@@ -194,7 +192,7 @@ asciiToByte
     adc .ERR_CODE_CONV_HELP          ; accu now contains value of first digit
     sta .ERR_CODE_CONV_HELP          ; store original_value * 8 + original_value * 2 = original_value * 10 
     iny
-    lda (.TMP_PTR), y
+    lda (TMP_PTR), y
     sec
     sbc #48                          ; add value of second digit
     clc

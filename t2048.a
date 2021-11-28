@@ -7,6 +7,9 @@
 !source "arith16.a"
 
 !zone main
+TMP_PTR = $FB;$FC
+TMP_PTR2 = $FD;$FE
+
 GETIN   = $FFE4
 JOYSTICK2 = $DC00
 KEYBOARD_SELECTED = 0
