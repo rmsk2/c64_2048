@@ -721,6 +721,8 @@ BIG_COL
 !tx "    start game       [f1]          "
 .QUIT_GAME
 !tx "    quit game        [f7]          "
+.DRIVE_INFO
+!tx "drive 8"
 
 
 .AUTHOR
@@ -756,7 +758,14 @@ showTitleScreen
     +printAtPosImmediate 22, 0, .INPUT_QUESTION, .DATA_PTR, 35
     +printAtPosImmediate 23, 0, .SOUND_QUESTION, .DATA_PTR, 35
     +printAtPosImmediate 24, 0, .QUIT_GAME, .DATA_PTR, 35
-    
+    lda DEVICE_NUM
+    cmp #08
+    beq .waitInput
+    +printAtPosImmediate 12, 23, .DRIVE_INFO, .DATA_PTR, 7
+    lda DEVICE_NUM              ; reload device number to use 
+    clc
+    adc #$30
+    sta 1024 + (12*40) + 23 + 6
 
 .waitInput
     jsr waitForKey

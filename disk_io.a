@@ -2,6 +2,7 @@
 
 DISK_IO_OK = 0
 DISK_IO_ERR = 1
+DEV_NUM = 8
 SETNAM = $FFBD
 SETLFS = $FFBA
 OPEN = $FFC0
@@ -24,7 +25,8 @@ FILE_NAME_READ_LEN = 17
 FILE_NAME_READ
 !tx "0:hiscore.dat,s,r"
 
-
+DEVICE_NUM
+!byte DEV_NUM
 ; --------------------------------------------------
 ; saveHiScore saves the hi score to disk
 ; 
@@ -39,7 +41,7 @@ saveHiScore
     jsr SETNAM
 
     lda #$01                                ; logical file number 1
-    ldx #$08                                ; device number 8
+    ldx DEVICE_NUM                         ; device number
     ldy #$00                                ; secondary address 0
     jsr SETLFS
 
@@ -75,7 +77,7 @@ loadHiScore
     jsr SETNAM
 
     lda #$01                          ; logical file number 1
-    ldx #$08                          ; device number 8
+    ldx DEVICE_NUM                   ; device number
     ldy #$00                          ; secondary address 0 
     jsr SETLFS
 
@@ -118,7 +120,7 @@ readErrorChannel
     jsr SETNAM
 
     lda #15                           ; logical file number 15
-    ldx #8                            ; device number 8
+    ldx DEVICE_NUM                   ; device number
     ldy #15                           ; secondary address 15
     jsr SETLFS
 
