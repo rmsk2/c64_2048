@@ -2,7 +2,6 @@
 
 DISK_IO_OK = 0
 DISK_IO_ERR = 1
-DEV_NUM = 8
 SETNAM = $FFBD
 SETLFS = $FFBA
 OPEN = $FFC0
@@ -25,8 +24,6 @@ FILE_NAME_READ_LEN = 17
 FILE_NAME_READ
 !tx "0:hiscore.dat,s,r"
 
-DEVICE_NUM
-!byte DEV_NUM
 ; --------------------------------------------------
 ; saveHiScore saves the hi score to disk
 ; 
