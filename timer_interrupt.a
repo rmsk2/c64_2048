@@ -8,6 +8,7 @@
 .CIA_RTC_SECONDS = $DC09
 .CIA_RTC_MINUTES = $DC0A
 .CIA_RTC_HOURS = $DC0B
+.CIA_CONTROL_REG = $DC0E
 
 
 ; --------------------------------------------------
@@ -128,6 +129,11 @@ deInitTimeInterrupt
 ; OUTPUT: None
 ; --------------------------------------------------
 resetAndStartRTC
+    ; set base frequency for RTC to 50Hz
+    lda .CIA_CONTROL_REG
+    ora #%10000000
+    sta .CIA_CONTROL_REG
+
     ; set rtc to 0
     lda #$00
     sta .CIA_RTC_HOURS
