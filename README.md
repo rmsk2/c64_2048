@@ -25,6 +25,7 @@ Here is a description of the controls:
 | Shift playfield down | `S` | Down |
 | Shift playfield left | `A` | Left |
 | Shift playfield right | `D` | Right |
+| Undo last move | `U` | - |
 | Quit game | `K` | Fire |
 
 The game is won by the player when a tile with the value 2 to the power of eleven or 2048 appears on 
