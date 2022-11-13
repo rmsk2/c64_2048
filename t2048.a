@@ -28,6 +28,7 @@ CHAR_LEFT = 65       ; "a"
 CHAR_RIGHT = 68      ; "d"
 CHAR_UP = 87         ; "w"
 CHAR_DOWN = 83       ; "s"
+CHAR_UNDO = 85       ; "u"
 NO_TIMER = 0
 VISIBLE_TIMER = 1
 SOUND_ON = 1
@@ -38,6 +39,8 @@ GAME_STOP = 0
 GAME_CONTINUE = 1
 NO_NEW_HI_SCORE = 0
 ADDED_HI_SCORE_VALUE = 1
+FIRST_RUN = 0
+NOT_FIRST_RUN = 1
 
 
     ; set up title effect
@@ -96,6 +99,11 @@ main
 
 .addNewChar
     jsr add2AtRandomPos
+    lda .FIRST_LOOP_ITERATION
+    bne .renderOnly
+    lda #NOT_FIRST_RUN
+    sta .FIRST_LOOP_ITERATION
+    jsr saveState
 
 .renderOnly
     jsr renderPlayingField
@@ -132,9 +140,6 @@ main
 
     ; play again (y/n)?
 .askPlayAgain
-    lda INPUT_METHOD
-    bne .useJoystickPlayAgain
-.playAgainKeyboard
     jsr waitForKey
     cmp #CHAR_YES               ; y => restart game
     beq .newGame
@@ -142,14 +147,7 @@ main
     bne .tryAgain
     jmp .mainDone               ; CHAR_NO pressed => quit game
 .tryAgain
-    jmp .playAgainKeyboard      ; neither y nor n => try again
-.useJoystickPlayAgain
-    jsr waitForJoystick
-    cmp #QUIT_CHAR_ASCII
-    bne .newGameJmp
-    jmp .mainDone               ; QUIT_CHAR_ASCII was triggered
-.newGameJmp
-    jmp .newGame
+    jmp .askPlayAgain      ; neither y nor n => try again
 
     ; wait for and evaluate player input via keyboard or joystick
 .waitForInput
@@ -171,25 +169,32 @@ main
     beq .userInputRight
     cmp #QUIT_CHAR_ASCII                ; K => Kuit ;-)
     beq .userInputQuit
+    cmp #CHAR_UNDO                      ; U => Undo last move
+    beq .userInputUndo                  
     bne .waitForInput
 .userInputUp
+    jsr saveState
     jsr shiftUp
     jmp .mainLoop
 .userInputDown
+    jsr saveState
     jsr shiftDown
     jmp .mainLoop
 .userInputLeft
+    jsr saveState
     jsr shiftLeft
     jmp .mainLoop
 .userInputRight
+    jsr saveState
     jsr shiftRight
     jmp .mainLoop
+.userInputUndo
+    jsr restoreState
+    jmp .waitForInput
 .userInputQuit
     ; print "are you sure (y/n)?""
     jsr areYouSure
 .askYouSure
-    lda INPUT_METHOD
-    bne .useJoystickYouSure 
     jsr waitForKey
 .evalSureQuestion
     cmp #CHAR_YES               ; y => Really quit game
@@ -197,12 +202,6 @@ main
     cmp #CHAR_NO                ; n => Continue game
     beq .continueGame
     jmp .askYouSure             ; neither y nor n => try again
-
-.useJoystickYouSure
-    jsr waitForJoystick
-    cmp #QUIT_CHAR_ASCII
-    bne .continueGame
-    beq .mainDone
 
 .continueGame
     ; remove frame and continue game
@@ -241,6 +240,8 @@ POWERS
 !byte $10, $24
 !byte $20, $48
 
+.FIRST_LOOP_ITERATION
+!byte 0
 
 ; --------------------------------------------------
 ; initGame inits a new game
@@ -271,6 +272,9 @@ initGame
     
     lda #VISIBLE_TIMER
     sta SHOW_TIMER
+
+    lda #FIRST_RUN
+    sta .FIRST_LOOP_ITERATION
     rts    
 
 ; --------------------------------------------------
@@ -296,6 +300,12 @@ waitForKey
 ; --------------------------------------------------
 waitForJoystick
 .loopJoy
+    ; Always allow keyboard input
+    jsr GETIN         ; get key from keyboard
+    cmp #0            ; if 0, no key pressed
+    bne .waitNeutral
+
+    ; if no key is pressed use jyostick
     lda JOYSTICK2
     cmp #$7e          ; up
     beq .upFound
@@ -343,6 +353,13 @@ OLDPLAYINGFIELD
 !byte $00, $00, $00, $00
 !byte $00, $00, $00, $00
 !byte $00, $00, $00, $00
+UNDOPLAYINGFIELD
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+UNDO_SCORE
+!byte $00, $00, $00
 
 HIGHSCORES
 !byte $00, $00, $00
@@ -362,8 +379,7 @@ LATEST_SCORE
     sta .target,y
     iny                   ; increment byte counter
     cpy #16               ; end pos reached?
-    bne .charLoop2        ; no, copy nect byte
-    rts               
+    bne .charLoop2        ; no, copy nect byte            
 }
 
 
@@ -374,7 +390,8 @@ LATEST_SCORE
 ; OUTPUT: None
 ; --------------------------------------------------
 savePlayingField 
-    +copyField PLAYINGFIELD, OLDPLAYINGFIELD           
+    +copyField PLAYINGFIELD, OLDPLAYINGFIELD
+    rts        
 
 
 ; --------------------------------------------------
@@ -384,7 +401,43 @@ savePlayingField
 ; OUTPUT: None
 ; --------------------------------------------------
 restorePlayingField 
-    +copyField OLDPLAYINGFIELD, PLAYINGFIELD           
+    +copyField OLDPLAYINGFIELD, PLAYINGFIELD
+    rts        
+
+; --------------------------------------------------
+; saveState copies the current state (playingfield, points) 
+; of the game
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+saveState 
+    +copyField PLAYINGFIELD, UNDOPLAYINGFIELD
+    lda POINTS
+    sta UNDO_SCORE
+    lda POINTS+1
+    sta UNDO_SCORE+1
+    lda POINTS+2
+    sta UNDO_SCORE+2
+    rts 
+
+; --------------------------------------------------
+; restoreState restores the saved state (playingfield, points) 
+; of the game and redraws the playing field
+; 
+; INPUT:  None
+; OUTPUT: None
+; --------------------------------------------------
+restoreState 
+    +copyField UNDOPLAYINGFIELD, PLAYINGFIELD
+    lda UNDO_SCORE
+    sta POINTS
+    lda UNDO_SCORE+1
+    sta POINTS+1
+    lda UNDO_SCORE+2
+    sta POINTS+2
+    jsr renderPlayingField
+    rts 
 
 
 NO_CHANGE_DETECTED = 0
