@@ -32,6 +32,7 @@ The game is won by the player when a tile with the value 2 to the power of eleve
 the playing field. The game is over if no valid moves are left. A move is valid, when it changes the 
 contents of the playing field either by moving at least one tile or by creating at least a new tile by 
 merging two adjacent (in the direction of the move/shift chosen by the player) tiles of the same value.
+By pressing the `U` key you can undo the last valid move. 
 
 Releases include the disk image that can be used in emulators so that you do not have to assemble the code 
 yourself.
