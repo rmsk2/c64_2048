@@ -93,9 +93,13 @@ main
 .mainLoop
     jsr testPlayingFieldChanged   ; compare to playing field saved before last move
     cmp #NO_CHANGE_DETECTED
-    bne .addNewChar
+    bne .playfieldChangeDetected
     jsr signalIllegalMove
     jmp .renderOnly
+.playfieldChangeDetected
+    lda .FIRST_LOOP_ITERATION
+    beq .addNewChar
+    jsr persistState
 
 .addNewChar
     jsr add2AtRandomPos
@@ -173,19 +177,19 @@ main
     beq .userInputUndo                  
     bne .waitForInput
 .userInputUp
-    jsr saveState
+    jsr saveTempState
     jsr shiftUp
     jmp .mainLoop
 .userInputDown
-    jsr saveState
+    jsr saveTempState
     jsr shiftDown
     jmp .mainLoop
 .userInputLeft
-    jsr saveState
+    jsr saveTempState
     jsr shiftLeft
     jmp .mainLoop
 .userInputRight
-    jsr saveState
+    jsr saveTempState
     jsr shiftRight
     jmp .mainLoop
 .userInputUndo
@@ -360,6 +364,13 @@ UNDOPLAYINGFIELD
 !byte $00, $00, $00, $00
 UNDO_SCORE
 !byte $00, $00, $00
+TEMPLAYINGFIELD
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+!byte $00, $00, $00, $00
+TEMP_SCORE
+!byte $00, $00, $00
 
 HIGHSCORES
 !byte $00, $00, $00
@@ -382,7 +393,14 @@ LATEST_SCORE
     bne .charLoop2        ; no, copy nect byte            
 }
 
-
+!macro copyScore .source, .target {
+    lda .source
+    sta .target
+    lda .source + 1
+    sta .target + 1
+    lda .source + 2
+    sta .target + 2    
+}
 ; --------------------------------------------------
 ; savePlayingField copies the PLAYINGFIELD to OLDPLAYINGFIELD.
 ; 
@@ -413,12 +431,7 @@ restorePlayingField
 ; --------------------------------------------------
 saveState 
     +copyField PLAYINGFIELD, UNDOPLAYINGFIELD
-    lda POINTS
-    sta UNDO_SCORE
-    lda POINTS+1
-    sta UNDO_SCORE+1
-    lda POINTS+2
-    sta UNDO_SCORE+2
+    +copyScore POINTS, UNDO_SCORE
     rts 
 
 ; --------------------------------------------------
@@ -430,15 +443,20 @@ saveState
 ; --------------------------------------------------
 restoreState 
     +copyField UNDOPLAYINGFIELD, PLAYINGFIELD
-    lda UNDO_SCORE
-    sta POINTS
-    lda UNDO_SCORE+1
-    sta POINTS+1
-    lda UNDO_SCORE+2
-    sta POINTS+2
+    +copyScore UNDO_SCORE, POINTS
     jsr renderPlayingField
     rts 
 
+
+saveTempState
+    +copyField PLAYINGFIELD, TEMPLAYINGFIELD
+    +copyScore POINTS, TEMP_SCORE
+    rts
+
+persistState
+    +copyField TEMPLAYINGFIELD, UNDOPLAYINGFIELD
+    +copyScore TEMP_SCORE, UNDO_SCORE
+    rts
 
 NO_CHANGE_DETECTED = 0
 CHANGE_DETECTED = 1
