@@ -307,7 +307,7 @@ waitForJoystick
     ; Always allow keyboard input
     jsr GETIN         ; get key from keyboard
     cmp #0            ; if 0, no key pressed
-    bne .waitNeutral
+    bne .inputDone
 
     ; if no key is pressed use jyostick
     lda JOYSTICK2
@@ -338,10 +338,16 @@ waitForJoystick
     lda #QUIT_CHAR_ASCII
     ; wait until joystick is in neutral position again
 .waitNeutral
+    ldx #0
+.debounceLoop
     ldy JOYSTICK2
     cpy #127
-    bne .waitNeutral
+    bne .debounceLoop
+    inx
+    cpx #100
+    bne .debounceLoop
 
+.inputDone
     rts
 
 
