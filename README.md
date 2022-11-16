@@ -5,8 +5,8 @@ It has to be assembled with the `ACME` macro assembler. It also uses the `c1541`
 with the `VICE` emulator to create the disk image. The diskimage `basictest.d64` contains some 
 `BASIC` programs that allow to interactively test some of the assembler routines. 
 
-The makefile creates a D64 disk image (`t2048.d64`) that can be loaded by C64 emulators. Use 
-`LOAD "T2048",8` and then `RUN` to run the game.
+The makefile creates a D64 disk image (`t2048.d64`) that can be loaded by C64 emulators or mounted
+on a real machine using SD2IEC. Use `LOAD "T2048",8` and then `RUN` to run the game.
 
 The following BASIC program is used to start the game. If you want to change the drive number from
 to 8 to 9 modify it accordingly.
