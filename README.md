@@ -35,7 +35,7 @@ merging two adjacent (in the direction of the move/shift chosen by the player) t
 By pressing the `U` key you can undo the last valid move. 
 
 Releases include the disk image that can be used in emulators so that you do not have to assemble the code 
-yourself.
+yourself. The software has been successfully tested on a real machine.
 
 Title screen:![](/t2048.png?raw=true "Title screen of game")
 
