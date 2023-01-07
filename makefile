@@ -5,7 +5,7 @@ all: t2048 t2048.d64
 
 ifdef MAC2048
 ACME=../acme/acme
-C1541=/Applications/vice-x86-64-sdl2-3.6.1/bin/c1541
+C1541=/Applications/vice-x86-64-gtk3-3.7.1/bin/c1541
 WORKDIR=/Users/martin/data/c64_2048
 else
 ACME=acme
