@@ -126,6 +126,19 @@ clockLFSR
     lda $A2
     sta SEED_BYTES+1
     
+    lda $d012                    ; current raster line
+    eor SEED_BYTES+1 
+    sta SEED_BYTES+1
+
+    lda $dc04                    ;Low-Byte of timer A in CIA-1
+    eor $dc05                    ;High-Byte of timer A in CIA-1
+    eor $dd04                    ;Low-Byte of timer A in CIA-2
+    adc $dd05                    ;High-Byte of timer A in CIA-2
+    eor $dd06                    ;Low-Byte of timer B in CIA-2
+    eor $dd07                    ;High-Byte of timer B in CIA-2
+    eor SEED_BYTES
+    sta SEED_BYTES
+    
     rts
 
 SEED_BYTES

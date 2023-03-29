@@ -279,7 +279,7 @@ renderPoints
 
 !ct scr
 .TIME_TEXT
-!tx "time elapsed 00:00:00" 
+!tx "elapsed time 00:00:00" 
 !ct pet
 
 
@@ -726,7 +726,7 @@ BIG_COL
 
 
 .AUTHOR
-!tx "zwei hoch 11. by martin grap [2022]"
+!tx "zwei hoch 11. by martin grap [2023]"
 !ct pet
 
 .TITLE_KEY_PRESSED
