@@ -126,6 +126,8 @@ clockLFSR
     lda $A2
     sta SEED_BYTES+1
     
+    ; taken from https://www.retro-programming.de/programming/nachschlagewerk/zufallszahlen-in-assembler/
+
     lda $d012                    ; current raster line
     eor SEED_BYTES+1 
     sta SEED_BYTES+1
